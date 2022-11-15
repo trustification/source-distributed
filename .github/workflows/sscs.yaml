@@ -1,0 +1,54 @@
+name: SSCS Workflow
+
+on: push 
+
+env:
+  COSIGN_EXPERIMENTAL: 1
+
+permissions:
+  id-token: write
+
+jobs: 
+  in-toto:
+    runs-on: ubuntu-20.04
+    permissions:
+      id-token: write
+      issues: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Install in-toto
+        run: |
+          # Install in-toto version with support for ecdsa
+          # (https://github.com/in-toto/in-toto/issues/519).
+          pip install ecdsa
+          pip install git+https://github.com/in-toto/in-toto.git@develop
+          # When a new release of in-toto is available just use:
+          #pip install in-toto
+          in-toto-sign --version
+
+      - name: Install Cosign
+        uses: sigstore/cosign-installer@v2.1.0
+        with:
+          cosign-release: v1.6.0
+
+      - name: Print Cosign version
+        run: |
+          cosign version
+
+      #- name: Setup tmate session
+      #  uses: mxschmitt/action-tmate@v3
+
+      - name: Generate OIDC Token
+        id: token
+        run: |
+          echo oidc_token=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}" \
+            -H "User-Agent: actions/oidc-client" \
+            -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
+            | jq '.value' | tr '"' ' ') >> $GITHUB_OUTPUT
+
+      - name: in-toto process
+        working-directory: sscs/in-toto
+        run: |
+          ./workflow.sh ${{ github.repository_owner }} ${{ github.event.repository.name }} ${{ steps.token.outputs.oidc_token }}

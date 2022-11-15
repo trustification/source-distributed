@@ -1,0 +1,25 @@
+[package]
+name = "source-distributed"
+version = "0.1.0"
+edition = "2021"
+license = "MIT OR Apache-2.0"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+clap = { version = "4.0.13", features = ["derive"] }
+policy-evaluator = {git = "https://github.com/kubewarden/policy-evaluator", branch="main"}
+k8s-openapi = { version = "0.16.0", default-features = false, features = ["v1_24"] }
+serde_json = "1.0.85"
+sigstore = { version = "0.5.3", default-features = false, features = ["rustls-tls"] }
+url = "2.2.2"
+x509-parser = { version = "0.14.0", features = ["verify"] }
+tokio = { version = "1.17.0", features = ["full"] }
+openidconnect = { version = "2.3", default-features = false, features = [ "reqwest" ] }
+
+[dev-dependencies]
+k8s-openapi = { version = "0.16.0", default-features = false, features = ["v1_24"] }
+
+[[bin]]
+name = "keygen"
+path = "src/keygen.rs"
