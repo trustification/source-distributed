@@ -40,8 +40,8 @@ jobs:
         run: |
           cosign version
 
-      #- name: Setup tmate session
-      #  uses: mxschmitt/action-tmate@v3
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
 
       - name: Generate OIDC Token
         id: token
