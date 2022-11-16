@@ -10,7 +10,7 @@ github_org=$1
 project_name=$2
 private_key_json=$3
 public_key_json=$4
-github_url=https://github.com/$github_org/${project_name}.git
+github_url=git@github.com:${github_org}/${project_name}.git
 workdir=work
 
 ## Create a work directory for all artifacts
