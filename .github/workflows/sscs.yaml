@@ -17,6 +17,9 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+        with:
+          ssh-key: ${{ secrets.GH_ACTION_PRIVATE }}
+          repository: trustification/source-distributed
 
       - name: Install in-toto
         run: |
