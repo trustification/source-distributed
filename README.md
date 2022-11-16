@@ -55,7 +55,7 @@ log. The next step is to look into how this can be made possible.
 
 _work in progress_
 
-### Running locally
+### Running the workflow locally
 The same workflow that the github action runs can be run locally, in which case
 there the OIDC flow will open a browser to choose the OICD Provider to use:
 ```console
@@ -64,3 +64,11 @@ $ ./workflow
 ```
 The output of the command will then be available in
 [artifacts](./sscs/in-toto/artifacts).
+
+### Running the keygen tool
+The [keygen](./src/keygen.rs) tool can be run by itself using the following
+command:
+```console
+$ cargo r --bin keygen
+```
+This will generate three files, `cosign.key`, `cosign.pub`, and `cosign.crt`.
