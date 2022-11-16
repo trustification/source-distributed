@@ -40,9 +40,6 @@ jobs:
         run: |
           cosign version
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-
       - name: Generate OIDC Token
         id: token
         run: |
@@ -51,7 +48,21 @@ jobs:
             -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             | jq '.value' | tr '"' ' ') >> $GITHUB_OUTPUT
 
+      - name: ssh-agent
+        run: |
+          ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+          ssh-add - <<< "${{ secrets.GH_ACTION_PRIVATE }}"
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+
+      - name: Setup tmate session
+        uses: mxschmitt/action-tmate@v3
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+
       - name: in-toto process
         working-directory: sscs/in-toto
         run: |
           ./workflow.sh ${{ github.repository_owner }} ${{ github.event.repository.name }} ${{ steps.token.outputs.oidc_token }}
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
