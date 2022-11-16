@@ -17,7 +17,7 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        with:
+        with: # the ssh-key and repository are only required while the repository is private
           ssh-key: ${{ secrets.GH_ACTION_PRIVATE }}
           repository: trustification/source-distributed
 
@@ -48,6 +48,7 @@ jobs:
             -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             | jq '.value' | tr '"' ' ') >> $GITHUB_OUTPUT
 
+      # This step is only required while the project is private
       - name: ssh-agent
         run: |
           ssh-agent -a $SSH_AUTH_SOCK > /dev/null
@@ -55,14 +56,17 @@ jobs:
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
 
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+      # This step is nice to debug the work flow and will allow an ssh connection
+      # to be established where further debugging can be performed. The command
+      # to connect can be found in the workflow log in github actions.
+      #- name: Setup tmate session
+      #  uses: mxschmitt/action-tmate@v3
+      #  env:
+      #    SSH_AUTH_SOCK: /tmp/ssh_agent.sock
 
       - name: in-toto process
         working-directory: sscs/in-toto
         run: |
           ./workflow.sh ${{ github.repository_owner }} ${{ github.event.repository.name }} ${{ steps.token.outputs.oidc_token }}
         env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock # This is only required while the project is private
