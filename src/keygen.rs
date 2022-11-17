@@ -25,7 +25,9 @@ async fn main() {
     {
         let keypair = signer.to_sigstore_keypair().unwrap();
         let private_key_pem = keypair.private_key_to_pem().unwrap();
+        let private_key_enc = keypair.private_key_to_encrypted_pem(b"_").unwrap();
         fs::write("cosign.key", private_key_pem).expect("Could not write private key");
+        fs::write("cosign.key.enc", private_key_enc).expect("Could not write private key");
         let public_key_pem = keypair.public_key_to_pem().unwrap();
         fs::write("cosign.pub", public_key_pem).expect("Could not write public key");
         fs::write("cosign.crt", cert).expect("Could not write certificate key");
