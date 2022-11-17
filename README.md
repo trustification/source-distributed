@@ -105,11 +105,13 @@ Error: signing artifacts.tar: reading key: unsupported pem type: ENCRYPTED SIGST
 main.go:62: error during command execution: signing artifacts.tar: reading key: unsupported pem type: ENCRYPTED SIGSTORE PRIVATE KEY
 ```
 It  seems like go cosign is wanting [ENCRYPTED COSIGN PRIVATE KEY](https://github.com/sigstore/cosign/blob/6b309df06f60ea5f58db22e9890713138c823d27/pkg/cosign/keys.go#L41) and not
-`ENCRYPTED SIGSTORE PRIVATE KEY`. Just updating this in the pem allowd for 
-the command to succeed:
+`ENCRYPTED SIGSTORE PRIVATE KEY`. Just changing this in the pem allowed for the
+command to succeed:
 ```console
 $ env COSIGN_EXPERIMENTAL=1 cosign sign-blob -d --bundle artifacts.bundle --key cosign.key.enc artifacts.tar
 ```
+I've created a [PR](https://github.com/sigstore/sigstore-rs/pull/165) which a
+suggestion about changing this tag and see what they think about it.
 
 _work in progress_
 
