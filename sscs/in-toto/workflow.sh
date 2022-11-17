@@ -10,6 +10,10 @@ GITHUB_TOKEN=$3
 PRIVATE_KEY=cosign.key
 PUBLIC_KEY=${PRIVATE_KEY}.pub.json
 
+artifacts_dir="artifacts"
+artifacts_tar="${artifacts_dir}.tar"
+verify_dir="verify"
+
 echo "workflow.sh arguments: $GITHUB_ORG $GITHUB_PROJECT $GITHUB_TOKEN"
 
 ## First generate the keypair to be used when signing
@@ -22,19 +26,40 @@ else
 	cargo r --manifest-path=../../Cargo.toml --bin keygen $GITHUB_TOKEN
 fi
 
+# Change the pem tag to BEGIN ENCRYPTED COSIGN PRIVATE KEY, releated to
+# https://github.com/sigstore/sigstore-rs/pull/165
+sed -i 's/SIGSTORE/COSIGN/' cosign.key.enc
+
 # Create keys in securesystemslib json key format. This will generate two
-# files: <keyname>.key.json and <keyname>.key..pub.json
+# files: <keyname>.key.json and <keyname>.key.pub.json
 echo "Import and convert cosign keys to securesystemslib json format"
 ./in-toto-key-import.py $PRIVATE_KEY
 
-mkdir -p artifacts
+mkdir -p $artifacts_dir
 echo "Create layout"
 ./create-layout.py $GITHUB_ORG $GITHUB_PROJECT ${PRIVATE_KEY}.json $PUBLIC_KEY
 
 echo "Create steps"
 ./create-steps.sh $GITHUB_ORG $GITHUB_PROJECT ${PRIVATE_KEY}.json $PUBLIC_KEY
 
-echo "Verify the artifacts"
-pushd artifacts > /dev/null
+echo "Tar the artifacts"
+pushd $artifacts_dir > /dev/null
+tar -cvf $artifacts_tar *
+mv $artifacts_tar ../
+popd > /dev/null
+
+echo "Sign the $artifacts_tar with cosign"
+env COSIGN_PASSWORD="_" cosign sign-blob -d --bundle artifacts.bundle --key cosign.key.enc artifacts.tar
+
+echo "Verify the $artifacts_tar with cosign"
+cosign verify-blob --bundle=artifacts.bundle --certificate cosign.crt artifacts.tar
+
+mkdir -p ${verify_dir}
+cp $artifacts_tar $verify_dir
+echo "Verify the  contents of $artifacts_tar"
+pushd $verify_dir > /dev/null
+tar xf $artifacts_tar
+rm $artifacts_tar
 in-toto-verify -v -t ecdsa --layout $GITHUB_PROJECT-layout.json --layout-keys=$PUBLIC_KEY
 popd > /dev/null
+rm -rf $verify_dir

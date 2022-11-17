@@ -109,9 +109,20 @@ It  seems like go cosign is wanting [ENCRYPTED COSIGN PRIVATE KEY](https://githu
 command to succeed:
 ```console
 $ env COSIGN_EXPERIMENTAL=1 cosign sign-blob -d --bundle artifacts.bundle --key cosign.key.enc artifacts.tar
+Using payload from: artifacts.tar
+Enter password for private key: 
+tlog entry created with index: 7275006
+Bundle wrote in the file artifacts.bundle
+MEUCIQCiehDxhd4mSKgTRC43c4TX6FyNEm2Lks29s7EiqNX7TAIgez1+KWB2fNfZfNt/sDnqJ9solE+I1R9XhFdZl/BKkN8=
 ```
 I've created a [PR](https://github.com/sigstore/sigstore-rs/pull/165) which a
 suggestion about changing this tag and see what they think about it.
+
+```console
+$ env COSIGN_PASSWORD="_" cosign verify-blob --bundle=artifacts.bundle artifacts.tar
+tlog entry verified offline
+Verified OK
+```
 
 _work in progress_
 

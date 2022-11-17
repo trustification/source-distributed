@@ -1,4 +1,5 @@
 target
 cosign.key
+cosign.key.enc
 cosign.pub
 cosign.crt

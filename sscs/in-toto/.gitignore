@@ -1,3 +1,6 @@
 artifacts
+artifacts.bundle
+artifacts.tar
 cosign.key.json
+cosign.key.enc
 cosign.key.pub.json

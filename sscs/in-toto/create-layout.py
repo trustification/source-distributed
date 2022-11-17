@@ -37,7 +37,7 @@ def process(github_org, github_project, private_key_file, public_key_file):
           "expected_command": [
               "git",
               "clone",
-              f"https://github.com/{github_org}/{github_project}.git"
+              f"git@github.com:{github_org}/{github_project}.git"
           ],
           "threshold": 1,
         },{

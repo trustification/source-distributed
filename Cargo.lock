@@ -2949,7 +2949,7 @@ dependencies = [
  "serde_json",
  "serde_yaml 0.9.14",
  "sha2 0.10.6",
- "sigstore",
+ "sigstore 0.5.3 (registry+https://github.com/rust-lang/crates.io-index)",
  "tracing",
  "url",
  "walkdir",
@@ -3643,6 +3643,48 @@ dependencies = [
 [[package]]
 name = "sigstore"
 version = "0.5.3"
+dependencies = [
+ "async-trait",
+ "base64 0.13.1",
+ "cached 0.40.0",
+ "digest 0.10.5",
+ "ecdsa",
+ "ed25519",
+ "ed25519-dalek-fiat",
+ "elliptic-curve",
+ "lazy_static",
+ "oci-distribution",
+ "olpc-cjson",
+ "open",
+ "openidconnect",
+ "p256",
+ "p384",
+ "pem",
+ "picky",
+ "pkcs1 0.4.1",
+ "pkcs8 0.9.0",
+ "rand",
+ "regex",
+ "reqwest",
+ "rsa 0.7.1",
+ "scrypt",
+ "serde",
+ "serde_json",
+ "sha2 0.10.6",
+ "signature",
+ "thiserror",
+ "tokio",
+ "tough",
+ "tracing",
+ "url",
+ "x509-parser",
+ "xsalsa20poly1305",
+ "zeroize",
+]
+
+[[package]]
+name = "sigstore"
+version = "0.5.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "cc814ce221da3ad80e304d35ae85fbc70fc8b8ea6ba72bd0ae3330958fd9598f"
 dependencies = [
@@ -3758,7 +3800,7 @@ dependencies = [
  "openidconnect",
  "policy-evaluator",
  "serde_json",
- "sigstore",
+ "sigstore 0.5.3",
  "tokio",
  "url",
  "x509-parser",
