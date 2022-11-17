@@ -32,7 +32,7 @@ jobs:
           in-toto-sign --version
 
       - name: Install Cosign
-        uses: sigstore/cosign-installer@v2.1.0
+        uses: sigstore/cosign-installer@v2.8.1
         with:
           cosign-release: v1.13.1
 
