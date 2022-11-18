@@ -49,10 +49,10 @@ mv $artifacts_tar ../
 popd > /dev/null
 
 echo "Sign the $artifacts_tar with cosign"
-env COSIGN_PASSWORD="_" COSIGN_EXPERIMENTAL=1 cosign sign-blob -d --bundle artifacts.bundle --output-certificate=artifacts.crt --output-signature=artifacts.sig --key cosign.key.enc artifacts.tar
+env COSIGN_PASSWORD="_" COSIGN_EXPERIMENTAL=1 cosign sign-blob -d --bundle artifacts.bundle --output-certificate=artifacts.crt --output-signature=artifacts.sig --key cosign.key.enc $artifacts_tar
 
-echo "Verify the $artifacts_tar with cosign"
-cosign verify-blob --bundle=artifacts.bundle
+echo "Verify $artifacts_tar with cosign"
+env COSIGN_EXPERIMENTAL=1 cosign verify-blob --bundle=artifacts.bundle $artifacts_tar
 
 mkdir -p ${verify_dir}
 cp $artifacts_tar $verify_dir
