@@ -10,8 +10,10 @@ GITHUB_TOKEN=$3
 PRIVATE_KEY=cosign.key
 PUBLIC_KEY=${PRIVATE_KEY}.pub.json
 
-artifacts_dir="artifacts"
-artifacts_tar="${artifacts_dir}.tar"
+commit_id=$(git rev-parse --verify HEAD)
+artifacts_dir="artifacts_work"
+artifacts_tar="${commit_id}.tar"
+artifacts_bundle="${commit_id}.bundle"
 verify_dir="verify"
 
 echo "workflow.sh arguments: $GITHUB_ORG $GITHUB_PROJECT $GITHUB_TOKEN"
@@ -49,10 +51,10 @@ mv $artifacts_tar ../
 popd > /dev/null
 
 echo "Sign the $artifacts_tar with cosign"
-env COSIGN_PASSWORD="_" COSIGN_EXPERIMENTAL=1 cosign sign-blob -d --bundle artifacts.bundle --output-certificate=artifacts.crt --output-signature=artifacts.sig --key cosign.key.enc $artifacts_tar
+env COSIGN_PASSWORD="_" COSIGN_EXPERIMENTAL=1 cosign sign-blob -d --bundle $artifacts_bundle --key cosign.key.enc $artifacts_tar
 
 echo "Verify $artifacts_tar with cosign"
-env COSIGN_EXPERIMENTAL=1 cosign verify-blob --bundle=artifacts.bundle $artifacts_tar
+env COSIGN_EXPERIMENTAL=1 cosign verify-blob --bundle=$artifacts_bundle $artifacts_tar
 
 mkdir -p ${verify_dir}
 cp $artifacts_tar $verify_dir
@@ -62,4 +64,10 @@ tar xf $artifacts_tar
 rm $artifacts_tar
 in-toto-verify -v -t ecdsa --layout $GITHUB_PROJECT-layout.json --layout-keys=$PUBLIC_KEY
 popd > /dev/null
+
 rm -rf $verify_dir
+rm -rf $artifacts_dir
+rm cosign.*
+
+mkdir -p artifacts
+mv $artifacts_tar $artifacts_bundle artifacts

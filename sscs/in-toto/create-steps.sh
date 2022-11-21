@@ -27,8 +27,8 @@ cargo test -q --manifest-path=${project_name}/Cargo.toml --no-run
 in-toto-run -n run_tests -s -k $private_key_json -t ecdsa -- cargo test --manifest-path ${project_name}/Cargo.toml
 
 echo "3) Copy artifacts"
-cp *.link ../artifacts
-cp $public_key_json ../artifacts
+cp *.link ../artifacts_work
+cp $public_key_json ../artifacts_work
 
 popd > /dev/null
 

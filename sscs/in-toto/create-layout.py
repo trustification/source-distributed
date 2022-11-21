@@ -90,10 +90,10 @@ def process(github_org, github_project, private_key_file, public_key_file):
 
   metadata = Metablock(signed=layout)
 
-  print(f"Creating artifacts/{github_project}-layout.json file")
+  print(f"Creating artifacts_work/{github_project}-layout.json file")
   print(metadata);
   metadata.sign(private_key)
-  metadata.dump(f"artifacts/{github_project}-layout.json")
+  metadata.dump(f"artifacts_work/{github_project}-layout.json")
 
 if __name__ == '__main__':
   process(sys.argv[1], sys.argv[2], sys.argv[3], sys.argv[4])
