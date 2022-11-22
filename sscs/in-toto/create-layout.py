@@ -66,7 +66,6 @@ def process(github_org, github_project, private_key_file, public_key_file):
           "expected_materials": [
               ["MATCH", f"{github_project}/*", "WITH", "PRODUCTS", "FROM", "clone_project"],
               ["ALLOW", f"{github_project}/target"],
-              ["ALLOW", "cosign.key.json"],
               ["ALLOW", "cosign.key.pub.json"],
               ["ALLOW", f"{github_project}-layout.json"],
               ["DISALLOW", "*"],
@@ -76,7 +75,6 @@ def process(github_org, github_project, private_key_file, public_key_file):
               ["MATCH", "*", "WITH", "PRODUCTS", "FROM", "clone_project"],
               ["ALLOW", f"{github_project}/target"],
               ["ALLOW", public_key_file],
-              ["ALLOW", "cosign.key.json"],
               ["ALLOW", "cosign.key.pub.json"],
               ["ALLOW", f"{github_project}-layout.json"],
           ],
