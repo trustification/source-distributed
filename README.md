@@ -229,6 +229,10 @@ source-distributed-91fc664624018534
 This is a hash of the url of the git repository, and is something that we needed
 when implementing `cargo-verify`.
 
+The directories in `.cargo/git/db` are the bare git repositories, and the
+directories in `.cargo/git/checkouts` are the checked out revisions which have
+a directory for each revision (short hash) used by Cargo.
+
 The implementation here is just to try to iron out how this might work and get
 a feel for things but at the same time actually going through the steps to
 discover issues. At the moment only git branches are supported, but we could
