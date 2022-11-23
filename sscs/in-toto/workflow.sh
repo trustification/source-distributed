@@ -10,8 +10,7 @@ GITHUB_TOKEN=$3
 PRIVATE_KEY=cosign.key
 PUBLIC_KEY=${PRIVATE_KEY}.pub.json
 
-commit_id_full=$(git rev-parse --verify HEAD)
-commit_id=$(printf '%.8s\n' $commit_id_full)
+commit_id=$(git branch --show-current)
 artifacts_dir="artifacts_work"
 artifacts_tar="${commit_id}.tar"
 artifacts_bundle="${commit_id}.bundle"
