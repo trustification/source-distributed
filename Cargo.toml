@@ -20,6 +20,9 @@ home = "0.5.4"
 cargo_toml = "0.13.0"
 cargo = "0.66.0"
 git2 = "0.15.0"
+tar = "0.4.38"
+
+source-distributed = { git = "ssh://git@github.com/trustification/source-distributed.git", branch="main" }
 
 [dev-dependencies]
 k8s-openapi = { version = "0.16.0", default-features = false, features = ["v1_24"] }

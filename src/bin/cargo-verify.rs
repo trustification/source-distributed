@@ -6,7 +6,10 @@ use cargo_toml::{Dependency, Manifest};
 use clap::Parser;
 use std::fmt;
 use std::fs;
+use std::fs::File;
 use std::path::{Path, PathBuf};
+use std::process::Command;
+use tar::Archive;
 use url::Url;
 
 #[derive(Parser, Debug)]
@@ -60,22 +63,51 @@ impl CargoGit {
         let git_remote = GitRemote::new(&self.url);
         let oid = git_remote.rev_for(&self.db_path, &git_ref).unwrap();
         let short = &oid.to_string()[..7];
-        println!("Branch: {} resolved to revision {}", &branch, short);
+        println!("Branch: {} resolved to revision {}\n", &branch, short);
         self.checkouts_path.join(short)
     }
 }
 
 impl fmt::Display for CargoGit {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "db_path: {}", &self.db_path.display())?;
-        write!(f, "checkouts_path: {}", &self.checkouts_path.display())
+        writeln!(f, "git_db_path: {}", &self.db_path.display())?;
+        write!(f, "git_checkouts_path: {}", &self.checkouts_path.display())
+    }
+}
+
+struct InTotoVerify {}
+
+impl InTotoVerify {
+    fn verify(artifact_tar: PathBuf) {
+        let tar = File::open(artifact_tar).unwrap();
+        let mut archive = Archive::new(tar);
+        let verify_dir: &'static str = "verify_dir";
+        fs::create_dir(verify_dir).unwrap();
+        archive.unpack(verify_dir).unwrap();
+
+        let output = Command::new("in-toto-verify")
+            .current_dir(verify_dir)
+            .arg("-v")
+            .arg("--key-types")
+            .arg("ecdsa")
+            .arg("--layout")
+            .arg("source-distributed-layout.json")
+            .arg("--layout-keys")
+            .arg("cosign.key.pub.json")
+            .output()
+            .expect("failed to execute in-toto");
+        println!("verify status: {}", output.status);
+        println!("verify stdout: {}", String::from_utf8_lossy(&output.stdout));
+        println!("verify stderr: {}", String::from_utf8_lossy(&output.stderr));
+
+        fs::remove_dir_all(verify_dir).unwrap();
     }
 }
 
 fn main() {
     let args = Args::parse();
     let dependency_name = args.dependency;
-    println!("Verifying dependency: {}", dependency_name);
+    println!("Verifying dependency: {}\n", dependency_name);
 
     let cargo_home = home::cargo_home().expect("Could not find the cargo home directory");
 
@@ -84,7 +116,7 @@ fn main() {
     let dependency = manifest
         .dependencies
         .get(&dependency_name)
-        .expect("Could not find the dependency: {}");
+        .expect("Could not find the dependency: {dependency_name}");
     match dependency {
         Dependency::Simple(version) => {
             // This means that it is a crates.io dep and will be in
@@ -93,11 +125,11 @@ fn main() {
             unimplemented!("Simple deps are currently not supported");
         }
         Dependency::Detailed(detail) => {
-            println!("Detailed dep: {:?}", &detail);
+            //println!("Detailed dep: {:?}", &detail);
             if detail.git.is_some() {
                 let cargo_git =
                     CargoGit::new(detail.git.as_ref().unwrap(), &dependency_name, &cargo_home);
-                println!("{}", cargo_git);
+                println!("{}\n", cargo_git);
 
                 let main = String::from("main");
                 if detail.branch.is_some() {
@@ -105,7 +137,7 @@ fn main() {
                     let checkout_dir = cargo_git.rev_directory(branch);
                     let artifacts_dir = checkout_dir.join(&args.artifacts_path);
 
-                    //println!("artifacts_dir: {:?}", &artifacts_dir);
+                    println!("artifacts_dir: {:?}", &artifacts_dir);
                     if !artifacts_dir.exists() {
                         eprintln!(
                             "Could not perform verification as the artifacts \
@@ -115,6 +147,19 @@ fn main() {
                         );
                         std::process::exit(1);
                     }
+                    let artifact_tar = artifacts_dir.join(format!("{branch}.tar"));
+                    println!("artifact_tar: {:?}\n", artifact_tar);
+
+                    if !artifact_tar.exists() {
+                        eprintln!(
+                            "Could not perform verification as the artifact \
+                             tar named '{}' could not be found in\n'{}'",
+                            &artifact_tar.display(),
+                            &artifacts_dir.display()
+                        );
+                        std::process::exit(1);
+                    }
+                    InTotoVerify::verify(artifact_tar);
                 }
                 if detail.tag.is_some() {
                     unimplemented!("Tag are currently not supported");
