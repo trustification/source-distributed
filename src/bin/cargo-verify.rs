@@ -78,7 +78,7 @@ impl fmt::Display for CargoGit {
 struct InTotoVerify {}
 
 impl InTotoVerify {
-    fn verify(artifact_tar: PathBuf) {
+    fn verify(artifact_tar: PathBuf, dependency: &String) {
         let tar = File::open(artifact_tar).unwrap();
         let mut archive = Archive::new(tar);
         let verify_dir: &'static str = "verify_dir";
@@ -91,7 +91,7 @@ impl InTotoVerify {
             .arg("--key-types")
             .arg("ecdsa")
             .arg("--layout")
-            .arg("source-distributed-layout.json")
+            .arg(format!("{}-layout.json", dependency))
             .arg("--layout-keys")
             .arg("cosign.key.pub.json")
             .output()
@@ -159,7 +159,7 @@ fn main() {
                         );
                         std::process::exit(1);
                     }
-                    InTotoVerify::verify(artifact_tar);
+                    InTotoVerify::verify(artifact_tar, &dependency_name);
                 }
                 if detail.tag.is_some() {
                     unimplemented!("Tag are currently not supported");
