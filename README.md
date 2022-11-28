@@ -242,6 +242,31 @@ discover issues. At the moment only git branches are supported, but we could
 add support for tags, revisions. And also there has not been any work done for
 dependencies coming from crates.io (yet).
 
+So far we have worked out how we might work with git dependencies (only
+supporting branches for now), so lets take a look at how we could do the same
+thing but with a dependency from crates.io.
+
+The dependencies from crates.io are located in `/.cargo/registry`:
+```console
+$ ls ~/.cargo/registry/
+cache  CACHEDIR.TAG  index  src
+```
+There can be multiple registries which are located in the index directory:
+```
+$ ls ~/.cargo/registry/index/
+github.com-1ecc6299db9ec823
+```
+
+We are interested in the `src` directory:
+```console
+$ ls ~/.cargo/registry/src/
+github.com-1ecc6299db9ec823
+```
+Now this was a little confusing to me as I did not expect a github.com directory
+here. It turns out that Cargo communicates with registries through a github
+repository which is called the `Index`. One such github repository can is
+https://github.com/rust-lang/crates.io-index.
+
 _work in progress_
 
 ### Running the workflow locally
