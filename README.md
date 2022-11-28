@@ -116,7 +116,10 @@ Bundle wrote in the file artifacts.bundle
 MEUCIQCiehDxhd4mSKgTRC43c4TX6FyNEm2Lks29s7EiqNX7TAIgez1+KWB2fNfZfNt/sDnqJ9solE+I1R9XhFdZl/BKkN8=
 ```
 I've created a [PR](https://github.com/sigstore/sigstore-rs/pull/165) which a
-suggestion about changing this tag and see what they think about it.
+suggestion about changing this tag and see what they think about it. That pull
+request has now been closed with out merging it and issue [#2471](https://github.com/sigstore/cosign/issues/2471)
+opened instead to allow `cosign` implementations to accept the SIGSTORE keys in
+addition to COSIGN keys.
 
 ```console
 $ env COSIGN_PASSWORD="_" cosign verify-blob --bundle=artifacts.bundle artifacts.tar
