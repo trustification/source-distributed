@@ -113,18 +113,14 @@ fn main() {
 
     let manifest_file = fs::read(&args.manifest_path).unwrap();
     let manifest = Manifest::from_slice(&manifest_file).unwrap();
-    let dependency = manifest
-        .dependencies
-        .get(&dependency_name)
-        .expect("Could not find the dependency: {dependency_name}");
-    match dependency {
-        Dependency::Simple(version) => {
+    match manifest.dependencies.get(&dependency_name) {
+        Some(Dependency::Simple(version)) => {
             // This means that it is a crates.io dep and will be in
             // .cargo/registry/src directory (I think).
             println!("Simple dep version: {}", version);
             unimplemented!("Simple deps are currently not supported");
         }
-        Dependency::Detailed(detail) => {
+        Some(Dependency::Detailed(detail)) => {
             //println!("Detailed dep: {:?}", &detail);
             if detail.git.is_some() {
                 let cargo_git =
@@ -172,9 +168,13 @@ fn main() {
                 unimplemented!("crates.io deps are currently not supported");
             }
         }
-        Dependency::Inherited(detail) => {
+        Some(Dependency::Inherited(detail)) => {
             println!("Inherited dep: {:?}", detail);
             unimplemented!("Inherited deps are currently not supported");
+        }
+        None => {
+            eprintln!("Could not find the dependency: {dependency_name} in Cargo.toml");
+            std::process::exit(1);
         }
     }
 }
