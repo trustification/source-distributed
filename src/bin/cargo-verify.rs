@@ -1,7 +1,8 @@
 use cargo::core::source::GitReference;
+use cargo::core::source::SourceId;
 use cargo::sources::git::GitRemote;
 use cargo::util::hex::short_hash;
-use cargo::util::CanonicalUrl;
+use cargo::util::{CanonicalUrl, Config};
 use cargo_toml::{Dependency, Manifest};
 use clap::Parser;
 use std::fmt;
@@ -109,6 +110,9 @@ fn main() {
     let dependency_name = args.dependency;
     println!("Verifying dependency: {}\n", dependency_name);
 
+    let config = Config::default().unwrap();
+    println!("root: {:?}", &config.home());
+
     let cargo_home = home::cargo_home().expect("Could not find the cargo home directory");
 
     let manifest_file = fs::read(&args.manifest_path).unwrap();
@@ -117,8 +121,24 @@ fn main() {
         Some(Dependency::Simple(version)) => {
             // This means that it is a crates.io dep and will be in
             // .cargo/registry/src directory (I think).
-            println!("Simple dep version: {}", version);
-            unimplemented!("Simple deps are currently not supported");
+            // In this case we only have the dependency name and its version.
+            println!(
+                "Simple Dependency: {}: version: {}",
+                dependency_name, version
+            );
+            let registry_id = SourceId::crates_io(&config).unwrap();
+            let host = registry_id.url().host().unwrap().to_string();
+            let dir_name = format!("{}-{}", host, short_hash(&registry_id));
+            let src_dir = cargo_home.join("registry").join("src").join(dir_name);
+            println!("{}", src_dir.display());
+            let dep_dir_name = format!("{}-{}", dependency_name, version);
+            println!("{}", &dep_dir_name);
+            let dep_dir = src_dir.join(dep_dir_name);
+            println!("{}", dep_dir.display());
+            if !dep_dir.exists() {
+                eprintln!("The dependency {} could not be found", dependency_name);
+                std::process::exit(1);
+            }
         }
         Some(Dependency::Detailed(detail)) => {
             //println!("Detailed dep: {:?}", &detail);
