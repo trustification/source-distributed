@@ -223,6 +223,8 @@ Verifying 'ALLOW source-distributed-layout.json'...
 The software product passed all verification.
 
 ```
+
+#### git dependencies
 Something that has confused me in the past when looking into the 
 `.cargo/git/db`, and `.cargo/git/checkouts` directories was the hash appended to
  the repository names. For example:
@@ -242,6 +244,7 @@ discover issues. At the moment only git branches are supported, but we could
 add support for tags, revisions. And also there has not been any work done for
 dependencies coming from crates.io (yet).
 
+#### crates.io dependencies
 So far we have worked out how we might work with git dependencies (only
 supporting branches for now), so lets take a look at how we could do the same
 thing but with a dependency from crates.io.
@@ -264,8 +267,26 @@ github.com-1ecc6299db9ec823
 ```
 Now this was a little confusing to me as I did not expect a github.com directory
 here. It turns out that Cargo communicates with registries through a github
-repository which is called the `Index`. One such github repository can is
-https://github.com/rust-lang/crates.io-index.
+repository which is called the `Index`.
+One such github repository can is https://github.com/rust-lang/crates.io-index.
+The hash following the host is the hash of a `SourceId` instance:
+```rust
+    let registry_id = SourceId::crates_io(&config).unwrap();
+    let host = registry_id.url().host().unwrap().to_string();
+    let dir_name = format!("{}-{}", host, cargo::util::hex::short_hash(&registry_id));
+```
+The above will produce:
+```console
+github.com-1ecc6299db9ec823
+```
+So that gives us access to the source directory. And to find the specified
+dependency we can use the dependency name and the version:
+```console
+    let dep_dir_name = format!("{}-{}", dependency_name, version);
+```
+With this information we have a path to the unpacked crate and can try to
+verify that directory using the same function that was used to verify the git
+directory.
 
 _work in progress_
 

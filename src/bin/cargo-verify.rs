@@ -105,14 +105,41 @@ impl InTotoVerify {
     }
 }
 
+fn verify_cargo_artifact(
+    src_dir: &Path,
+    artifacts_path: &str,
+    artifact_name: &str,
+    dependency_name: &str,
+) {
+    println!("Verifying dependency: {}\n", dependency_name);
+    let artifacts_dir = src_dir.join(artifacts_path);
+    if !artifacts_dir.exists() {
+        eprintln!(
+            "Could not perform verification of dependency '{}', an artifacts \
+             directory named '{}' could not be found in '{}'\n",
+            &dependency_name,
+            &artifacts_path,
+            &src_dir.display()
+        );
+        std::process::exit(1);
+    }
+    let artifact_tar = artifacts_dir.join(format!("{artifact_name}.tar"));
+    if !artifact_tar.exists() {
+        eprintln!(
+            "Could not perform verification as the artifact \
+                     tar named '{}' could not be found in\n'{}'",
+            &artifact_tar.display(),
+            &artifacts_dir.display()
+        );
+        std::process::exit(1);
+    }
+    InTotoVerify::verify(artifact_tar, &dependency_name.to_string());
+}
+
 fn main() {
     let args = Args::parse();
     let dependency_name = args.dependency;
-    println!("Verifying dependency: {}\n", dependency_name);
-
     let config = Config::default().unwrap();
-    println!("root: {:?}", &config.home());
-
     let cargo_home = home::cargo_home().expect("Could not find the cargo home directory");
 
     let manifest_file = fs::read(&args.manifest_path).unwrap();
@@ -122,60 +149,27 @@ fn main() {
             // This means that it is a crates.io dep and will be in
             // .cargo/registry/src directory (I think).
             // In this case we only have the dependency name and its version.
-            println!(
-                "Simple Dependency: {}: version: {}",
-                dependency_name, version
-            );
             let registry_id = SourceId::crates_io(&config).unwrap();
             let host = registry_id.url().host().unwrap().to_string();
             let dir_name = format!("{}-{}", host, short_hash(&registry_id));
             let src_dir = cargo_home.join("registry").join("src").join(dir_name);
-            println!("{}", src_dir.display());
-            let dep_dir_name = format!("{}-{}", dependency_name, version);
-            println!("{}", &dep_dir_name);
-            let dep_dir = src_dir.join(dep_dir_name);
-            println!("{}", dep_dir.display());
+            let dep_dir = src_dir.join(format!("{}-{}", dependency_name, version));
             if !dep_dir.exists() {
                 eprintln!("The dependency {} could not be found", dependency_name);
                 std::process::exit(1);
             }
+            verify_cargo_artifact(&dep_dir, &args.artifacts_path, &version, &dependency_name)
         }
         Some(Dependency::Detailed(detail)) => {
-            //println!("Detailed dep: {:?}", &detail);
             if detail.git.is_some() {
                 let cargo_git =
                     CargoGit::new(detail.git.as_ref().unwrap(), &dependency_name, &cargo_home);
-                println!("{}\n", cargo_git);
 
                 let main = String::from("main");
                 if detail.branch.is_some() {
                     let branch = detail.branch.as_ref().unwrap_or(&main);
-                    let checkout_dir = cargo_git.rev_directory(branch);
-                    let artifacts_dir = checkout_dir.join(&args.artifacts_path);
-
-                    println!("artifacts_dir: {:?}", &artifacts_dir);
-                    if !artifacts_dir.exists() {
-                        eprintln!(
-                            "Could not perform verification as the artifacts \
-                             directory named '{}' could not be found in\n'{}'",
-                            &args.artifacts_path,
-                            &checkout_dir.display()
-                        );
-                        std::process::exit(1);
-                    }
-                    let artifact_tar = artifacts_dir.join(format!("{branch}.tar"));
-                    println!("artifact_tar: {:?}\n", artifact_tar);
-
-                    if !artifact_tar.exists() {
-                        eprintln!(
-                            "Could not perform verification as the artifact \
-                             tar named '{}' could not be found in\n'{}'",
-                            &artifact_tar.display(),
-                            &artifacts_dir.display()
-                        );
-                        std::process::exit(1);
-                    }
-                    InTotoVerify::verify(artifact_tar, &dependency_name);
+                    let dep_dir = cargo_git.rev_directory(branch);
+                    verify_cargo_artifact(&dep_dir, &args.artifacts_path, branch, &dependency_name);
                 }
                 if detail.tag.is_some() {
                     unimplemented!("Tag are currently not supported");
@@ -184,12 +178,12 @@ fn main() {
                     unimplemented!("Revisions are currently not supported");
                 }
             } else {
-                println!("version: {}", &detail.version.as_ref().unwrap());
+                eprintln!("version: {}", &detail.version.as_ref().unwrap());
                 unimplemented!("crates.io deps are currently not supported");
             }
         }
         Some(Dependency::Inherited(detail)) => {
-            println!("Inherited dep: {:?}", detail);
+            eprintln!("Inherited dep: {:?}", detail);
             unimplemented!("Inherited deps are currently not supported");
         }
         None => {
