@@ -115,9 +115,9 @@ tlog entry created with index: 7275006
 Bundle wrote in the file artifacts.bundle
 MEUCIQCiehDxhd4mSKgTRC43c4TX6FyNEm2Lks29s7EiqNX7TAIgez1+KWB2fNfZfNt/sDnqJ9solE+I1R9XhFdZl/BKkN8=
 ```
-I've created a [PR](https://github.com/sigstore/sigstore-rs/pull/165) which a
+I've created a [sigstore-rs/pull/#165](https://github.com/sigstore/sigstore-rs/pull/165) which a
 suggestion about changing this tag and see what they think about it. That pull
-request has now been closed with out merging it and issue [#2471](https://github.com/sigstore/cosign/issues/2471)
+request has now been closed without merging it and issue [#2471](https://github.com/sigstore/cosign/issues/2471)
 opened instead to allow `cosign` implementations to accept the SIGSTORE keys in
 addition to COSIGN keys.
 
@@ -141,15 +141,16 @@ $ cargo r --bin cargo-verify -- -d source-distributed
 ```
 The command line argument `-d` or `--depencency` specifies a dependency that
 is expected to exist in `Cargo.toml`. Depending on the type of dependency, for
-example it might be a `git` dependency or a `crates.io` dependency, it will
-perform the verification is different ways. A git dependency has been chosen to
-try this out: 
+example it might be a `git` dependency, or a `crates.io` dependency, it will
+perform the verification is different ways.
+
+For example a git dependency could be specified like this in Cargo.toml: 
 ```toml
 source-distributed = { git = "ssh://git@github.com/trustification/source-distributed.git", branch="main" }
 ```
 This information is used by `cargo-verify` to find the git repository that
-cargo has checked out for the branch main. This location will used to find the
-expected artifacts to be verified.
+cargo has checked out for the branch `main`. This location will be used to find
+the expected artifacts needed to perform the verification.
 
 The output of the above command will look like this:
 ```console
@@ -241,8 +242,7 @@ a directory for each revision (short hash) used by Cargo.
 The implementation here is just to try to iron out how this might work and get
 a feel for things but at the same time actually going through the steps to
 discover issues. At the moment only git branches are supported, but we could
-add support for tags, revisions. And also there has not been any work done for
-dependencies coming from crates.io (yet).
+add support for tags, and revisions. 
 
 #### crates.io dependencies
 So far we have worked out how we might work with git dependencies (only
