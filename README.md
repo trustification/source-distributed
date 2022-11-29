@@ -23,7 +23,7 @@ The first task was to setup a [github action](./github/workflows/sscs.yaml) that
 uses githubs OIDC access token and pass that to Fulcio, Sigstore's Certificate
 Authority (CA).
 
-We wrote to [program](./src/keygen.rs) in Rust that uses
+We wrote a [program](./src/keygen.rs) in Rust that uses
 [sigstore-rs](https://github.com/sigstore/sigstore-rs) to request a
 signing-certificate from Fulcio and save the short-lived keys and certificate
 to disk. The keys types from Fulcio are `ecdsa` which in-toto did not have
