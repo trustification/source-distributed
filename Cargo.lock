@@ -2191,7 +2191,6 @@ dependencies = [
 [[package]]
 name = "in-toto"
 version = "0.3.0"
-source = "git+https://github.com/in-toto/in-toto-rs.git?branch=master#34c4b33a9752cf2510ccf5965baffad030c7659b"
 dependencies = [
  "chrono",
  "data-encoding",
@@ -2199,6 +2198,7 @@ dependencies = [
  "futures-executor",
  "futures-io",
  "futures-util",
+ "glob",
  "http",
  "hyper",
  "itoa 0.4.8",
@@ -2207,6 +2207,7 @@ dependencies = [
  "once_cell",
  "parking_lot 0.11.2",
  "path-clean",
+ "path-matchers",
  "pem",
  "percent-encoding",
  "rand",
@@ -3224,6 +3225,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9a81540d94551664b72b72829b12bd167c73c9d25fbac0e04fafa8023f7e4901"
 dependencies = [
  "once_cell",
+]
+
+[[package]]
+name = "path-matchers"
+version = "1.0.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "36cd9b72a47679ec193a5f0229d9ab686b7bd45e1fbc59ccf953c9f3d83f7b2b"
+dependencies = [
+ "glob",
 ]
 
 [[package]]

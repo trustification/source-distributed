@@ -1,11 +1,13 @@
 use chrono::{offset::Local, DateTime, Days, Utc};
 use clap::Parser;
-//use in_toto::crypto::PublicKey;
-use in_toto::models::{LayoutMetadata, LayoutMetadataBuilder};
+use in_toto::crypto::{PrivateKey, SignatureScheme};
+use in_toto::models::inspection::Inspection;
+use in_toto::models::rule::{Artifact, ArtifactRule};
+use in_toto::models::step::{Command, Step};
+use in_toto::models::VirtualTargetPath;
+use in_toto::models::{LayoutMetadataBuilder, Metablock, MetablockBuilder};
 use std::fs;
-/*
-use url::Url;
-*/
+use x509_parser::pem::parse_x509_pem;
 
 #[derive(Parser, Debug)]
 #[command(author,
@@ -28,23 +30,124 @@ struct Args {
 
     #[arg(
         long,
-        help = "The public key belonging to the private key which will be stored in the metadata"
+        help = "The directory to store the artifacts in.",
+        default_value = "artifacts_work"
     )]
-    public_key: String,
+    artifacts_dir: String,
+
+    #[arg(
+        long,
+        help = "The number of days that the layout should be valid",
+        default_value = "365"
+    )]
+    valid_days: u64,
 }
 
 fn create_layout(
     org_name: &String,
     repo_name: &String,
-    private_key_pem: &String,
-    public_key_pem: &String,
-) -> in_toto::Result<LayoutMetadata> {
-    let expires: DateTime<Utc> =
-        DateTime::from(Local::now().checked_add_days(Days::new(365)).unwrap());
-    LayoutMetadataBuilder::new()
+    priv_key: &PrivateKey,
+    valid_days: u64,
+) -> in_toto::Result<Metablock> {
+    let expires: DateTime<Utc> = DateTime::from(
+        Local::now()
+            .checked_add_days(Days::new(valid_days))
+            .unwrap(),
+    );
+    let metadata = LayoutMetadataBuilder::new()
         .expires(expires)
         .readme(format!("in-toto layout for {}/{}.", org_name, repo_name).to_string())
-        .build()
+        .add_key(priv_key.public().to_owned())
+        .add_step(
+            Step::new("clone-project")
+                .threshold(1)
+                .add_expected_product(ArtifactRule::Create(repo_name.as_str().into()))
+                .add_expected_product(ArtifactRule::Allow(
+                    VirtualTargetPath::new(format!("{}/*", repo_name)).unwrap(),
+                ))
+                .add_expected_product(ArtifactRule::Allow(
+                    VirtualTargetPath::new(format!("{}-layout.json", repo_name)).unwrap(),
+                ))
+                .add_key(priv_key.key_id().to_owned())
+                .expected_command(
+                    format!("git clone git@github.com:{}/{}.git", org_name, repo_name).into(),
+                ),
+        )
+        .add_step(
+            Step::new("run-tests")
+                .threshold(1)
+                .add_expected_material(ArtifactRule::Match {
+                    pattern: format!("{}/*", repo_name).as_str().into(),
+                    in_src: None,
+                    with: Artifact::Products,
+                    in_dst: None,
+                    from: "clone-project".into(),
+                })
+                .add_expected_material(ArtifactRule::Allow("Cargo.toml".into()))
+                .add_expected_material(ArtifactRule::Disallow("*".into()))
+                .add_expected_product(ArtifactRule::Allow("Cargo.lock".into()))
+                .add_expected_product(ArtifactRule::Allow("cosign.key.json".into()))
+                .add_expected_product(ArtifactRule::Allow("cosign.key.pub.json".into()))
+                .add_expected_product(ArtifactRule::Disallow("*".into()))
+                .add_key(priv_key.key_id().to_owned())
+                .expected_command(
+                    format!("cargo test --manifest-path={}/Cargo.toml", repo_name).into(),
+                ),
+        )
+        .add_inspect(
+            Inspection::new("cargo-fetch")
+                .add_expected_material(ArtifactRule::Match {
+                    pattern: format!("{}/*", repo_name).as_str().into(),
+                    in_src: None,
+                    with: Artifact::Products,
+                    in_dst: None,
+                    from: "clone-project".into(),
+                })
+                .add_expected_material(ArtifactRule::Allow(
+                    format!("{}/target", repo_name).as_str().into(),
+                ))
+                .add_expected_material(ArtifactRule::Allow("cosign.key.pub.json".into()))
+                .add_expected_material(ArtifactRule::Allow(
+                    format!("{}-layout.json", repo_name).as_str().into(),
+                ))
+                .add_expected_material(ArtifactRule::Disallow("*".into()))
+                .add_expected_product(ArtifactRule::Match {
+                    pattern: format!("{}/Cargo.toml", repo_name).as_str().into(),
+                    in_src: None,
+                    with: Artifact::Products,
+                    from: "clone-project".into(),
+                    in_dst: None,
+                })
+                .add_expected_product(ArtifactRule::Match {
+                    pattern: "*".into(),
+                    in_src: None,
+                    with: Artifact::Products,
+                    from: "clone-project".into(),
+                    in_dst: None,
+                })
+                .add_expected_product(ArtifactRule::Allow(
+                    format!("{}/target", repo_name).as_str().into(),
+                ))
+                .add_expected_product(ArtifactRule::Allow("cosign.key.pub.json".into()))
+                .add_expected_product(ArtifactRule::Allow(
+                    format!("{}-layout.json", repo_name).as_str().into(),
+                ))
+                .run(Command::from(format!(
+                    "git clone git@github.com:{}/{}.git",
+                    org_name, repo_name
+                ))),
+        )
+        .build()?;
+
+    let signed_metablock_builder =
+        MetablockBuilder::from_metadata(Box::new(metadata)).sign(&[&priv_key])?;
+    Ok(signed_metablock_builder.build())
+}
+
+fn priv_key_from_pem(s: &str) -> in_toto::Result<PrivateKey> {
+    let (_, pem) = parse_x509_pem(s.as_bytes()).unwrap();
+    let priv_key = PrivateKey::from_pkcs8(&pem.contents, SignatureScheme::EcdsaP256Sha256).unwrap();
+    Ok(priv_key)
 }
 
 #[tokio::main]
@@ -55,13 +158,19 @@ async fn main() {
     println!("Generate in-toto layout for {}/{}", org_name, repo_name);
 
     let private_key_pem = fs::read_to_string(&args.private_key).unwrap();
-    println!("{:?}", &private_key_pem);
+    let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
 
-    let public_key_pem = fs::read_to_string(&args.public_key).unwrap();
-    println!("{:?}", &public_key_pem);
-
-    let metadata = create_layout(&org_name, &repo_name, &private_key_pem, &public_key_pem);
-    println!("{:?}", metadata);
+    let signed_mb = create_layout(&org_name, &repo_name, &priv_key, args.valid_days).unwrap();
+    //println!("{:?}", metablock.signatures());
+    let verified_mb = signed_mb.verify(1, [priv_key.public()]);
+    if verified_mb.is_err() {
+        eprintln!("Could not verify metadata: {:?}", verified_mb.err());
+        std::process::exit(1);
+    }
+    let filename = format!("{}/{}-layout.json", args.artifacts_dir, repo_name);
+    let s = serde_json::to_string_pretty(&signed_mb).unwrap();
+    fs::write(filename, s).unwrap();
+    println!("Generate {}-layout.json", repo_name);
 }
 
 #[test]
@@ -75,17 +184,14 @@ YBLG6iIMRoTDjAZ6IcRYK2XtuGuhRANCAATay6vxtSSz5Ry3BpjFvb+JwofPOstV
 t7ZUJg5yjfqkVkHAva/Lv7rti608NrJR6NZsHD6aUjsxwQHUMjJ8rIit
 -----END PRIVATE KEY-----
 "#;
-    let public_key_pem = r#"
------BEGIN PUBLIC KEY-----
-MFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAE2sur8bUks+UctwaYxb2/icKHzzrL
-Vbe2VCYOco36pFZBwL2vy7+67YutPDayUejWbBw+mlI7McEB1DIyfKyIrQ==
------END PUBLIC KEY-----
-"#;
-    let metadata = create_layout(
+    let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
+    let metablock = create_layout(
         &org_name.to_string(),
         &repo_name.to_string(),
-        &private_key_pem.to_string(),
-        &public_key_pem.to_string(),
-    );
-    println!("{:?}", metadata);
+        &priv_key,
+        365,
+    )
+    .unwrap();
+    let v = metablock.verify(1, [priv_key.public()]);
+    assert!(v.is_ok());
 }

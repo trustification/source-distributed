@@ -21,7 +21,8 @@ cargo_toml = "0.13.0"
 cargo = "0.66.0"
 git2 = "0.15.0"
 tar = "0.4.38"
-in-toto = {git = "https://github.com/in-toto/in-toto-rs.git", branch="master"}
+#in-toto = {git = "https://github.com/in-toto/in-toto-rs.git", branch="master"}
+in-toto = {path = "../in-toto-rs"}
 chrono = { version = "0.4", features = [ "serde" ] }
 
 source-distributed = { git = "ssh://git@github.com/trustification/source-distributed.git", branch="main" }
