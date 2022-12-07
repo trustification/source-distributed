@@ -4470,6 +4470,7 @@ dependencies = [
  "in-toto",
  "k8s-openapi",
  "openidconnect",
+ "openssl",
  "policy-evaluator",
  "serde_json",
  "sigstore 0.6.0",
