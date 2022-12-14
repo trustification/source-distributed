@@ -6,7 +6,6 @@ use in_toto::models::rule::{Artifact, ArtifactRule};
 use in_toto::models::step::{Command, Step};
 use in_toto::models::VirtualTargetPath;
 use in_toto::models::{LayoutMetadataBuilder, Metablock, MetablockBuilder};
-use openssl::pkey::PKey;
 use std::fs;
 use x509_parser::pem::parse_x509_pem;
 
@@ -50,7 +49,7 @@ fn create_layout(
     priv_key: &PrivateKey,
     valid_days: u64,
 ) -> in_toto::Result<Metablock> {
-    println!("private_key id: {:?}", priv_key.key_id());
+    println!("keyid: {:?}", priv_key.key_id());
     let expires: DateTime<Utc> = DateTime::from(
         Local::now()
             .checked_add_days(Days::new(valid_days))
@@ -147,24 +146,15 @@ fn create_layout(
 }
 
 fn priv_key_from_pem(s: &str) -> in_toto::Result<PrivateKey> {
+    //println!("{:?}", s);
     let json_format: serde_json::Result<serde_json::Value> = serde_json::from_str(s);
-    if let Ok(json) = json_format {
-        let keyid = &json["keyid"];
-        println!("keyid:  {:?}", keyid.as_str().unwrap());
-        let pem_json_value = &json["keyval"]["private"];
-        let pem_str = pem_json_value.as_str().unwrap();
-        println!("pem_str: {:?}", &pem_str);
-        let something = PKey::private_key_from_pem(&pem_str.as_bytes());
-        let pkcs8_format = &something.unwrap().private_key_to_pem_pkcs8().unwrap();
-        let pkcs8_format = std::str::from_utf8(&pkcs8_format).unwrap();
-        println!("pkcs8 format {:?}", &pkcs8_format);
-        let (_, der) = parse_x509_pem(pkcs8_format.as_bytes()).unwrap();
-        let priv_key =
-            PrivateKey::from_pkcs8(&der.contents, SignatureScheme::EcdsaP256Sha256).unwrap();
+    if let Ok(_) = json_format {
+        let priv_key = PrivateKey::from_securesystemslib_ecdsa(s).unwrap();
         println!("{:?}", priv_key.public().key_id());
         return Ok(priv_key);
     } else {
         let (_, der) = parse_x509_pem(s.as_bytes()).unwrap();
+        println!("{:02x?}", &der.contents);
         let priv_key =
             PrivateKey::from_pkcs8(&der.contents, SignatureScheme::EcdsaP256Sha256).unwrap();
         println!("{:?}", priv_key.public().key_id());

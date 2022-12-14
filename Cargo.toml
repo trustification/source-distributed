@@ -24,7 +24,6 @@ tar = "0.4.38"
 #in-toto = {git = "https://github.com/in-toto/in-toto-rs.git", branch="master"}
 in-toto = {path = "../in-toto-rs"}
 chrono = { version = "0.4", features = [ "serde" ] }
-openssl = "0.10.5"
 
 source-distributed = { git = "ssh://git@github.com/trustification/source-distributed.git", branch="main" }
 
