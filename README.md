@@ -626,7 +626,7 @@ And if we look at the `calculate_key_id` function we find the following:
   }
 ```
 Notice that the last argument to `shim_public_key` is `None` and that this is
-the keyid which optional. `shim_public_key` is a function that returns a 
+the keyid which optional. `shim_public_key` is a function that returns a
 shims::PublicKey:
 ```rust
   fn shim_public_key(
@@ -693,7 +693,9 @@ And the generated hash will be:
 hash (key_id): "32c305141e442ad9ea7aae6695cd3282aeb018ee363781c066ad826c1929245e
 ```
 
-{"keytype": String("ecdsa"), "scheme": String("ecdsa-sha2-nistp256"), "keyid": String("67697271397ace039b7d1b3df0ca6a20e35c7bda160866555f116ff3deba4b1c"), "keyval": Object {"public": String("-----BEGIN PUBLIC KEY-----\nMFkwEwYHKoZIzj0CAQYIKoZIzj0DAQcDQgAEY62fGO3T7D69Hmu58+/QcDAXB30W\nzh84kXRBNviAkNyUf5hVVXcH/FwFtJ6S7P7snrB9BrhLWRIG7X6POF2CJw==\n-----END PUBLIC KEY-----\n"), "private": String("-----BEGIN EC PRIVATE KEY-----\nMHcCAQEEIFjdJCw6Lkx1VPYtdnbihRKoLFb36zzAc0XgCJ1B5/oPoAoGCCqGSM49\nAwEHoUQDQgAEY62fGO3T7D69Hmu58+/QcDAXB30Wzh84kXRBNviAkNyUf5hVVXcH\n/FwFtJ6S7P7snrB9BrhLWRIG7X6POF2CJw==\n-----END EC PRIVATE KEY-----\n")}, "keyid_hash_algorithms": Array [String("sha256"), String("sha512")]}
+After thinking about this some more doing this conversion seems like a lot of
+code and it would be better to allow in-toto-rs to accept the securesystemslib
+json format and generate the keys from that.
 
 _work in progress_
 
