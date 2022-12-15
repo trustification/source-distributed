@@ -332,6 +332,10 @@ json format, parse the contents of the private and public key and use them
 to generate the in-toto-rs specific `PrivateKey`. In the process we would also
 like to be able to use the `keyid` from the above json to avoid issues with
 verifying later.
+For example:
+```rust
+    let priv_key = PrivateKey::from_securesystemslib_ecdsa(s).unwrap();
+```
 
 
 ### create-layout.rs priv_key_from_pem issue
