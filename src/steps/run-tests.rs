@@ -57,22 +57,17 @@ async fn main() {
     let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
     println!("key_id: {:?}", priv_key.key_id().prefix());
 
-    // in-toto-run -n run_tests -s -k $private_key_json -t ecdsa -- cargo test --manifest-path ${project_name}/Cargo.toml
-    // This is the directory that cloned out sources should be in. This is
+    // This is the directory that cloned sources should be in. This is
     // expected to be run after create-clone-steps.rs.
     let work_dir = &args.work_dir.join(&repo_name);
+    println!("work_dir: {:?}", work_dir);
 
     let link = runlib::in_toto_run(
         &args.step_name,                  // name
         Some(work_dir.to_str().unwrap()), // workdir
         &[""],                            // materials
         &[""],
-        &[
-            "cargo",
-            "test",
-            "--manifest-path",
-            format!("{}/Cargo.toml", &repo_name).as_str(),
-        ],
+        &["cargo", "test"],
         Some(&priv_key),
         Some(&["sha512", "sha256"]),
         None,
@@ -85,19 +80,4 @@ async fn main() {
     let s = serde_json::to_string_pretty(&json).unwrap();
     fs::write(&path, s).unwrap();
     println!("Generated {}", path.display());
-}
-
-#[test]
-fn test_create_step() {
-    let org_name = "someorg";
-    let repo_name = "somerepo";
-    let private_key_pem = r#"
------BEGIN PRIVATE KEY-----
-MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQga+rUgQvB60AIJZL1
-YBLG6iIMRoTDjAZ6IcRYK2XtuGuhRANCAATay6vxtSSz5Ry3BpjFvb+JwofPOstV
-t7ZUJg5yjfqkVkHAva/Lv7rti608NrJR6NZsHD6aUjsxwQHUMjJ8rIit
------END PRIVATE KEY-----
-"#;
-    let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
-    assert!(true);
 }
