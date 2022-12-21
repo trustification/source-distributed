@@ -721,3 +721,14 @@ command:
 $ cargo r --bin keygen
 ```
 This will generate three files, `cosign.key`, `cosign.pub`, and `cosign.crt`.
+
+### Creating the in-toto steps
+Use the following command to create the clone-project step:
+```console
+$ cargo r --bin create-clone-project-step -- -o trustification -r source-distributed --private-key=cosign.key
+```
+
+Use the following command to create the run-tests step:
+```console
+$ cargo r --bin create-run-tests-step -- -o trustification -r source-distributed --private-key=cosign.key
+``
