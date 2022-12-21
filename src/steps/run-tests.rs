@@ -23,13 +23,25 @@ struct Args {
     #[arg(long, help = "The private key to be used to sign the layout")]
     private_key: String,
 
-    #[arg(short, long, help = "The name of the step")]
+    #[arg(
+        short,
+        long,
+        help = "The name of the step",
+        default_value = "run-tests"
+    )]
     step_name: String,
 
     #[arg(
         long,
-        help = "The directory to store the artifacts in.",
-        default_value = "sscs/in-toto"
+        help = "The directory to where the steps will be performed",
+        default_value = "sscs/in-toto/work"
+    )]
+    work_dir: PathBuf,
+
+    #[arg(
+        long,
+        help = "The directory to store the artifacts in",
+        default_value = "sscs/in-toto/artifacts"
     )]
     artifacts_dir: PathBuf,
 }
@@ -45,29 +57,29 @@ async fn main() {
     let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
     println!("key_id: {:?}", priv_key.key_id().prefix());
 
+    // in-toto-run -n run_tests -s -k $private_key_json -t ecdsa -- cargo test --manifest-path ${project_name}/Cargo.toml
+    // This is the directory that cloned out sources should be in. This is
+    // expected to be run after create-clone-steps.rs.
+    let work_dir = &args.work_dir.join(&repo_name);
+
     let link = runlib::in_toto_run(
-        &args.step_name, // name
-        Some("work"),    // workdir
-        &[""],           // materials
+        &args.step_name,                  // name
+        Some(work_dir.to_str().unwrap()), // workdir
+        &[""],                            // materials
+        &[""],
         &[
-            // products
-            "Cargo.toml",
-            "Cargo.lock",
-            "README.md",
-            "src",
-        ],
-        &[
-            "git",
-            "clone",
-            format!("git@github.com:{}/{}.git", org_name, repo_name).as_str(),
+            "cargo",
+            "test",
+            "--manifest-path",
+            format!("{}/Cargo.toml", &repo_name).as_str(),
         ],
         Some(&priv_key),
         Some(&["sha512", "sha256"]),
         None,
     )
     .unwrap();
-    let json = serde_json::to_value(&link).unwrap();
 
+    let json = serde_json::to_value(&link).unwrap();
     let filename = format!("{}.{}.link", args.step_name, priv_key.key_id().prefix());
     let path = &args.artifacts_dir.join(&filename);
     let s = serde_json::to_string_pretty(&json).unwrap();

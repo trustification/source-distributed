@@ -47,5 +47,9 @@ name = "create-layout"
 path = "src/create-layout.rs"
 
 [[bin]]
-name = "create-steps"
-path = "src/create-steps.rs"
+name = "create-clone-project-step"
+path = "src/steps/clone-project.rs"
+
+[[bin]]
+name = "create-run-tests-step"
+path = "src/steps/run-tests.rs"
