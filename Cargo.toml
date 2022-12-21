@@ -41,3 +41,7 @@ path = "src/bin/cargo-verify.rs"
 [[bin]]
 name = "create-layout"
 path = "src/create-layout.rs"
+
+[[bin]]
+name = "create-steps"
+path = "src/create-steps.rs"
