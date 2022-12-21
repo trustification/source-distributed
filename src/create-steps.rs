@@ -1,9 +1,8 @@
 use clap::Parser;
-use in_toto::crypto::{PrivateKey, SignatureScheme};
 use in_toto::runlib;
+use source_distributed::priv_key_from_pem;
 use std::fs;
 use std::path::PathBuf;
-use x509_parser::pem::parse_x509_pem;
 
 #[derive(Parser, Debug)]
 #[command(author,
@@ -33,19 +32,6 @@ struct Args {
         default_value = "sscs/in-toto"
     )]
     artifacts_dir: PathBuf,
-}
-
-fn priv_key_from_pem(s: &str) -> in_toto::Result<PrivateKey> {
-    let json_format: serde_json::Result<serde_json::Value> = serde_json::from_str(s);
-    if let Ok(_) = json_format {
-        let priv_key = PrivateKey::from_securesystemslib_ecdsa(s).unwrap();
-        return Ok(priv_key);
-    } else {
-        let (_, der) = parse_x509_pem(s.as_bytes()).unwrap();
-        let priv_key =
-            PrivateKey::from_pkcs8(&der.contents, SignatureScheme::EcdsaP256Sha256).unwrap();
-        return Ok(priv_key);
-    }
 }
 
 #[tokio::main]

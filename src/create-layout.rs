@@ -1,13 +1,13 @@
 use chrono::{offset::Local, DateTime, Days, Utc};
 use clap::Parser;
-use in_toto::crypto::{PrivateKey, SignatureScheme};
+use in_toto::crypto::PrivateKey;
 use in_toto::models::inspection::Inspection;
 use in_toto::models::rule::{Artifact, ArtifactRule};
 use in_toto::models::step::{Command, Step};
 use in_toto::models::VirtualTargetPath;
 use in_toto::models::{LayoutMetadataBuilder, Metablock, MetablockBuilder};
+use source_distributed::priv_key_from_pem;
 use std::fs;
-use x509_parser::pem::parse_x509_pem;
 
 #[derive(Parser, Debug)]
 #[command(author,
@@ -143,23 +143,6 @@ fn create_layout(
     let signed_metablock_builder =
         MetablockBuilder::from_metadata(Box::new(metadata)).sign(&[&priv_key])?;
     Ok(signed_metablock_builder.build())
-}
-
-fn priv_key_from_pem(s: &str) -> in_toto::Result<PrivateKey> {
-    //println!("{:?}", s);
-    let json_format: serde_json::Result<serde_json::Value> = serde_json::from_str(s);
-    if let Ok(_) = json_format {
-        let priv_key = PrivateKey::from_securesystemslib_ecdsa(s).unwrap();
-        println!("{:?}", priv_key.public().key_id());
-        return Ok(priv_key);
-    } else {
-        let (_, der) = parse_x509_pem(s.as_bytes()).unwrap();
-        println!("{:02x?}", &der.contents);
-        let priv_key =
-            PrivateKey::from_pkcs8(&der.contents, SignatureScheme::EcdsaP256Sha256).unwrap();
-        println!("{:?}", priv_key.public().key_id());
-        return Ok(priv_key);
-    }
 }
 
 #[tokio::main]

@@ -30,6 +30,10 @@ source-distributed = { git = "ssh://git@github.com/trustification/source-distrib
 [dev-dependencies]
 k8s-openapi = { version = "0.16.0", default-features = false, features = ["v1_24"] }
 
+[lib]
+name = "source_distributed"
+path = "src/lib.rs"
+
 [[bin]]
 name = "keygen"
 path = "src/keygen.rs"
