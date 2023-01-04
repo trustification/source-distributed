@@ -21,25 +21,6 @@ jobs:
           ssh-key: ${{ secrets.GH_ACTION_PRIVATE }}
           repository: trustification/source-distributed
 
-      - name: Install in-toto
-        run: |
-          # Install in-toto version with support for ecdsa
-          # (https://github.com/in-toto/in-toto/issues/519).
-          pip install ecdsa
-          pip install git+https://github.com/in-toto/in-toto.git@develop
-          # When a new release of in-toto is available just use:
-          #pip install in-toto
-          in-toto-sign --version
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v2.8.1
-        with:
-          cosign-release: v1.13.1
-
-      - name: Print Cosign version
-        run: |
-          cosign version
-
       - name: Generate OIDC Token
         id: token
         run: |
