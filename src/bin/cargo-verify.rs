@@ -162,6 +162,8 @@ fn main() {
     let config = Config::default().unwrap();
     let cargo_home = home::cargo_home().expect("Could not find the cargo home directory");
 
+    //let current_dir = std::env::current_dir().unwrap();
+    //println!("current_dir: {}", current_dir.display());
     let manifest_file = fs::read(&args.manifest_path).unwrap();
     let manifest = Manifest::from_slice(&manifest_file).unwrap();
     match manifest.dependencies.get(&dependency_name) {
@@ -193,7 +195,6 @@ fn main() {
                     } else {
                         cargo_git.rev_directory(branch)
                     };
-                    //let dep_dir = cargo_git.rev_directory(branch);
                     verify_cargo_artifact(&dep_dir, &args.artifacts_path, branch, &dependency_name);
                 }
                 if detail.tag.is_some() {

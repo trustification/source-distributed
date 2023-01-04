@@ -125,14 +125,16 @@ async fn main() {
                 "Cargo.toml",
                 "Cargo.lock",
                 "README.md",
-                "src/keygen.rs",
+                "src/bin/cargo-verify.rs",
+                "src/bin/cargo-in-toto-gen.rs",
             ],
             &[
                 // products
                 "Cargo.toml",
                 "Cargo.lock",
                 "README.md",
-                "src/keygen.rs",
+                "src/bin/cargo-verify.rs",
+                "src/bin/cargo-in-toto-gen.rs",
             ],
             &[
                 "git",
