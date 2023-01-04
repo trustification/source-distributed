@@ -36,10 +36,6 @@ name = "source_distributed"
 path = "src/lib.rs"
 
 [[bin]]
-name = "keygen"
-path = "src/keygen.rs"
-
-[[bin]]
 name = "cargo-in-toto-gen"
 path = "src/bin/cargo-in-toto-gen.rs"
 
