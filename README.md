@@ -701,13 +701,6 @@ After thinking about this some more doing this conversion seems like a lot of
 code and it would be better to allow in-toto-rs to accept the securesystemslib
 json format and generate the keys from that.
 
-Tool:
-* generate ephemeral keypair using cosign
-* transform the keys into securesystemslib json format
-* create the in-toto layout
-* create the in-toto steps
-* tar the files
-* verify
 _work in progress_
 
 
@@ -721,14 +714,6 @@ $ ./workflow
 The output of the command will then be available in
 [artifacts](./sscs/in-toto/artifacts).
 
-### Running the keygen tool
-The [keygen](./src/keygen.rs) tool can be run by itself using the following
-command:
-```console
-$ cargo r --bin keygen
-```
-This will generate three files, `cosign.key`, `cosign.pub`, and `cosign.crt`.
-
 ### Generate in-toto artifacts
 Use the following command to generate the in-toto artifacts
 ```console
@@ -739,7 +724,8 @@ Use the following command to verify a source dependency:
 ```console
 $ cargo r --bin cargo-verify -- -d source-distributed
 ```
-And the following option can be used to check a directory that is outside of
+
+The following option can be used to check a directory that is outside of
 `~/.cargo/git`:
 ```console
 $ cargo r --bin cargo-verify -- -d source-distributed -a sscs/in-toto/artifacts/in-toto-rs -p $PWD
