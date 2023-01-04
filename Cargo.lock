@@ -2191,6 +2191,7 @@ dependencies = [
 [[package]]
 name = "in-toto"
 version = "0.3.0"
+source = "git+https://github.com/danbev/in-toto-rs.git?branch=ecdsa-support-with-json#329600fd4d1c50c181864ea9f53c47a262575174"
 dependencies = [
  "chrono",
  "data-encoding",

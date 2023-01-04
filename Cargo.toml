@@ -22,7 +22,8 @@ cargo = "0.66.0"
 git2 = "0.15.0"
 tar = "0.4.38"
 #in-toto = {git = "https://github.com/in-toto/in-toto-rs.git", branch="master"}
-in-toto = {path = "../in-toto-rs"}
+#in-toto = {path = "../in-toto-rs"}
+in-toto = { git = "https://github.com/danbev/in-toto-rs.git", branch="ecdsa-support-with-json" }
 chrono = { version = "0.4", features = [ "serde" ] }
 anyhow = "1.0.68"
 
