@@ -5,12 +5,14 @@ use cargo::util::hex::short_hash;
 use cargo::util::{CanonicalUrl, Config};
 use cargo_toml::{Dependency, Manifest};
 use clap::Parser;
+use in_toto::crypto::PublicKey;
+use in_toto::models::Metablock;
+use in_toto::verifylib::in_toto_verify;
+use serde_json;
+use std::collections::HashMap;
 use std::fmt;
 use std::fs;
-use std::fs::File;
 use std::path::{Path, PathBuf};
-use std::process::Command;
-use tar::Archive;
 use url::Url;
 
 #[derive(Parser, Debug)]
@@ -37,6 +39,13 @@ struct Args {
         default_value = "sscs/in-toto/artifacts"
     )]
     artifacts_path: String,
+
+    #[arg(
+        short,
+        long,
+        help = "Project artifacts directory to use instead of ~/.cargo/git"
+    )]
+    project_dir: Option<PathBuf>,
 }
 
 struct CargoGit {
@@ -78,40 +87,61 @@ impl fmt::Display for CargoGit {
 
 struct InTotoVerify {}
 
+pub fn copy_all(source: impl AsRef<Path>, destination: impl AsRef<Path>) -> std::io::Result<()> {
+    fs::create_dir_all(&destination)?;
+    for entry in fs::read_dir(source)? {
+        let entry = entry?;
+        let filetype = entry.file_type()?;
+        if filetype.is_dir() {
+            copy_all(entry.path(), destination.as_ref().join(entry.file_name()))?;
+        } else {
+            fs::copy(entry.path(), destination.as_ref().join(entry.file_name()))?;
+        }
+    }
+    Ok(())
+}
+
 impl InTotoVerify {
-    fn verify(artifact_tar: PathBuf, dependency: &String) {
-        let tar = File::open(artifact_tar).unwrap();
-        let mut archive = Archive::new(tar);
-        let verify_dir: &'static str = "verify_dir";
-        fs::create_dir(verify_dir).unwrap();
-        archive.unpack(verify_dir).unwrap();
+    fn verify(artifact_dir: &PathBuf, dependency: &String) {
+        let verify_dir = Path::new("verify_dir");
+        copy_all(artifact_dir, verify_dir).unwrap();
 
-        let output = Command::new("in-toto-verify")
-            .current_dir(verify_dir)
-            .arg("-v")
-            .arg("--key-types")
-            .arg("ecdsa")
-            .arg("--layout")
-            .arg(format!("{}-layout.json", dependency))
-            .arg("--layout-keys")
-            .arg("cosign.key.pub.json")
-            .output()
-            .expect("failed to execute in-toto");
-        println!("verify status: {}", output.status);
-        println!("verify stdout: {}", String::from_utf8_lossy(&output.stdout));
-        println!("verify stderr: {}", String::from_utf8_lossy(&output.stderr));
+        let layout_filename = format!("{}-layout.json", dependency);
+        let layout_path = verify_dir.join(layout_filename);
+        let layout_bytes = fs::read(layout_path).expect("read layout failed");
+        let layout = serde_json::from_slice::<Metablock>(&layout_bytes)
+            .expect("Could not deserialize Metablock");
 
+        let pub_key_path = verify_dir.join("cosign.pub");
+        let pub_key_pem = fs::read_to_string(pub_key_path).unwrap();
+        let pub_key = PublicKey::from_pem_spki(
+            &pub_key_pem,
+            in_toto::crypto::SignatureScheme::EcdsaP256Sha256,
+        )
+        .unwrap();
+
+        let key_id = layout.signatures[0].key_id().clone();
+        println!("PublicKey::key_id: {:?}", &pub_key.key_id());
+        println!("Layout:key_id: {:?}", &key_id);
+        let layout_keys = HashMap::from([(key_id, pub_key)]);
+
+        let current_dir = std::env::current_dir().unwrap();
+        std::env::set_current_dir(verify_dir).unwrap();
+        //in_toto_verify(&layout, layout_keys, verify_dir.to_str().unwrap(), None)
+        in_toto_verify(&layout, layout_keys, ".", None).expect("verify failed");
+
+        println!("Verification succeeded!");
+        std::env::set_current_dir(current_dir).unwrap();
         fs::remove_dir_all(verify_dir).unwrap();
     }
 }
 
 fn verify_cargo_artifact(
-    src_dir: &Path,
+    src_dir: &PathBuf,
     artifacts_path: &str,
-    artifact_name: &str,
+    _artifact_name: &str,
     dependency_name: &str,
 ) {
-    println!("Verifying dependency: {}\n", dependency_name);
     let artifacts_dir = src_dir.join(artifacts_path);
     if !artifacts_dir.exists() {
         eprintln!(
@@ -123,17 +153,7 @@ fn verify_cargo_artifact(
         );
         std::process::exit(1);
     }
-    let artifact_tar = artifacts_dir.join(format!("{artifact_name}.tar"));
-    if !artifact_tar.exists() {
-        eprintln!(
-            "Could not perform verification as the artifact \
-                     tar named '{}' could not be found in\n'{}'",
-            &artifact_tar.display(),
-            &artifacts_dir.display()
-        );
-        std::process::exit(1);
-    }
-    InTotoVerify::verify(artifact_tar, &dependency_name.to_string());
+    InTotoVerify::verify(&artifacts_dir, &dependency_name.to_string());
 }
 
 fn main() {
@@ -168,11 +188,16 @@ fn main() {
                 let main = String::from("main");
                 if detail.branch.is_some() {
                     let branch = detail.branch.as_ref().unwrap_or(&main);
-                    let dep_dir = cargo_git.rev_directory(branch);
+                    let dep_dir = if args.project_dir.is_some() {
+                        args.project_dir.unwrap()
+                    } else {
+                        cargo_git.rev_directory(branch)
+                    };
+                    //let dep_dir = cargo_git.rev_directory(branch);
                     verify_cargo_artifact(&dep_dir, &args.artifacts_path, branch, &dependency_name);
                 }
                 if detail.tag.is_some() {
-                    unimplemented!("Tag are currently not supported");
+                    unimplemented!("Tags are currently not supported");
                 }
                 if detail.rev.is_some() {
                     unimplemented!("Revisions are currently not supported");

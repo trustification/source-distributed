@@ -24,6 +24,7 @@ tar = "0.4.38"
 #in-toto = {git = "https://github.com/in-toto/in-toto-rs.git", branch="master"}
 in-toto = {path = "../in-toto-rs"}
 chrono = { version = "0.4", features = [ "serde" ] }
+anyhow = "1.0.68"
 
 source-distributed = { git = "ssh://git@github.com/trustification/source-distributed.git", branch="main" }
 
@@ -39,17 +40,9 @@ name = "keygen"
 path = "src/keygen.rs"
 
 [[bin]]
+name = "cargo-in-toto-gen"
+path = "src/bin/cargo-in-toto-gen.rs"
+
+[[bin]]
 name = "cargo-verify"
 path = "src/bin/cargo-verify.rs"
-
-[[bin]]
-name = "create-layout"
-path = "src/create-layout.rs"
-
-[[bin]]
-name = "create-clone-project-step"
-path = "src/steps/clone-project.rs"
-
-[[bin]]
-name = "create-run-tests-step"
-path = "src/steps/run-tests.rs"

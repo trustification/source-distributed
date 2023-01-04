@@ -1,6 +1,6 @@
 use clap::Parser;
 use in_toto::runlib;
-use source_distributed::priv_key_from_pem;
+use source_distributed::private_key_from_file;
 use std::fs;
 use std::path::PathBuf;
 
@@ -8,7 +8,7 @@ use std::path::PathBuf;
 #[command(author,
     version,
     long_about = None)]
-/// create-steps generates ...
+/// clone-project step...
 struct Args {
     #[arg(
         short,
@@ -21,9 +21,14 @@ struct Args {
     repo_name: String,
 
     #[arg(long, help = "The private key to be used to sign the layout")]
-    private_key: String,
+    private_key: PathBuf,
 
-    #[arg(short, long, help = "The name of the step")]
+    #[arg(
+        short,
+        long,
+        help = "The name of the step",
+        default_value = "clone-project"
+    )]
     step_name: String,
 
     #[arg(
@@ -55,14 +60,13 @@ async fn main() {
             .expect(format!("Could not create working directory {:?}", &work_dir).as_str());
     }
 
-    let private_key_pem = fs::read_to_string(&args.private_key).unwrap();
-    let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
+    let priv_key = private_key_from_file(&args.private_key);
     println!("key_id: {:?}", priv_key.key_id().prefix());
 
     let link = runlib::in_toto_run(
         &args.step_name,                   // name
         Some(&work_dir.to_str().unwrap()), // workdir
-        &[""],                             // materials
+        &[work_dir.to_str().unwrap()],     // materials
         &[
             // products
             "Cargo.toml",
@@ -87,19 +91,4 @@ async fn main() {
     let s = serde_json::to_string_pretty(&json).unwrap();
     fs::write(&path, s).unwrap();
     println!("Generated {}", path.display());
-}
-
-#[test]
-fn test_create_step() {
-    let org_name = "someorg";
-    let repo_name = "somerepo";
-    let private_key_pem = r#"
------BEGIN PRIVATE KEY-----
-MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQga+rUgQvB60AIJZL1
-YBLG6iIMRoTDjAZ6IcRYK2XtuGuhRANCAATay6vxtSSz5Ry3BpjFvb+JwofPOstV
-t7ZUJg5yjfqkVkHAva/Lv7rti608NrJR6NZsHD6aUjsxwQHUMjJ8rIit
------END PRIVATE KEY-----
-"#;
-    let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
-    assert!(true);
 }

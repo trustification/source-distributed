@@ -701,6 +701,13 @@ After thinking about this some more doing this conversion seems like a lot of
 code and it would be better to allow in-toto-rs to accept the securesystemslib
 json format and generate the keys from that.
 
+Tool:
+* generate ephemeral keypair using cosign
+* transform the keys into securesystemslib json format
+* create the in-toto layout
+* create the in-toto steps
+* tar the files
+* verify
 _work in progress_
 
 
@@ -722,13 +729,19 @@ $ cargo r --bin keygen
 ```
 This will generate three files, `cosign.key`, `cosign.pub`, and `cosign.crt`.
 
-### Creating the in-toto steps
-Use the following command to create the clone-project step:
+### Generate in-toto artifacts
+Use the following command to generate the in-toto artifacts
 ```console
-$ cargo r --bin create-clone-project-step -- -o trustification -r source-distributed --private-key=cosign.key
+$ cargo r --bin cargo-in-toto-gen -- -o trustification -r source-distributed
 ```
 
-Use the following command to create the run-tests step:
+Use the following command to verify a source dependency:
 ```console
-$ cargo r --bin create-run-tests-step -- -o trustification -r source-distributed --private-key=cosign.key
-``
+$ cargo r --bin cargo-verify -- -d source-distributed
+```
+And the following option can be used to check a directory that is outside of
+`~/.cargo/git`:
+```console
+$ cargo r --bin cargo-verify -- -d source-distributed -a sscs/in-toto/artifacts/in-toto-rs -p $PWD
+
+```

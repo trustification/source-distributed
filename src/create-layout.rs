@@ -6,8 +6,9 @@ use in_toto::models::rule::{Artifact, ArtifactRule};
 use in_toto::models::step::{Command, Step};
 use in_toto::models::VirtualTargetPath;
 use in_toto::models::{LayoutMetadataBuilder, Metablock, MetablockBuilder};
-use source_distributed::priv_key_from_pem;
+use source_distributed::private_key_from_file;
 use std::fs;
+use std::path::PathBuf;
 
 #[derive(Parser, Debug)]
 #[command(author,
@@ -26,7 +27,7 @@ struct Args {
     repo_name: String,
 
     #[arg(long, help = "The private key to be used to sign the layout")]
-    private_key: String,
+    private_key: PathBuf,
 
     #[arg(
         long,
@@ -49,7 +50,8 @@ fn create_layout(
     priv_key: &PrivateKey,
     valid_days: u64,
 ) -> in_toto::Result<Metablock> {
-    println!("keyid: {:?}", priv_key.key_id());
+    println!("private keyid: {:?}", priv_key.key_id());
+    println!("public keyid: {:?}", priv_key.public().key_id());
     let expires: DateTime<Utc> = DateTime::from(
         Local::now()
             .checked_add_days(Days::new(valid_days))
@@ -152,8 +154,7 @@ async fn main() {
     let repo_name = args.repo_name;
     println!("Generate in-toto layout for {}/{}", org_name, repo_name);
 
-    let private_key_pem = fs::read_to_string(&args.private_key).unwrap();
-    let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
+    let priv_key = private_key_from_file(&args.private_key);
 
     let signed_mb = create_layout(&org_name, &repo_name, &priv_key, args.valid_days).unwrap();
     //println!("{:?}", metablock.signatures());
@@ -165,28 +166,35 @@ async fn main() {
     let filename = format!("{}/{}-layout.json", args.artifacts_dir, repo_name);
     let s = serde_json::to_string_pretty(&signed_mb).unwrap();
     fs::write(filename, s).unwrap();
-    println!("Generate {}-layout.json", repo_name);
+    println!(
+        "Generate {}/{}-layout.json",
+        &args.artifacts_dir, &repo_name
+    );
 }
 
-#[test]
-fn test_create_layout() {
-    let org_name = "someorg";
-    let repo_name = "somerepo";
-    let private_key_pem = r#"
+#[cfg(test)]
+mod test {
+    use source_distributed::{create_layout, priv_key_from_pem};
+    #[test]
+    fn test_create_layout() {
+        let org_name = "someorg";
+        let repo_name = "somerepo";
+        let private_key_pem = r#"
 -----BEGIN PRIVATE KEY-----
 MIGHAgEAMBMGByqGSM49AgEGCCqGSM49AwEHBG0wawIBAQQga+rUgQvB60AIJZL1
 YBLG6iIMRoTDjAZ6IcRYK2XtuGuhRANCAATay6vxtSSz5Ry3BpjFvb+JwofPOstV
 t7ZUJg5yjfqkVkHAva/Lv7rti608NrJR6NZsHD6aUjsxwQHUMjJ8rIit
 -----END PRIVATE KEY-----
 "#;
-    let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
-    let metablock = create_layout(
-        &org_name.to_string(),
-        &repo_name.to_string(),
-        &priv_key,
-        365,
-    )
-    .unwrap();
-    let v = metablock.verify(1, [priv_key.public()]);
-    assert!(v.is_ok());
+        let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
+        let metablock = create_layout(
+            &org_name.to_string(),
+            &repo_name.to_string(),
+            &priv_key,
+            365,
+        )
+        .unwrap();
+        let v = metablock.verify(1, [priv_key.public()]);
+        assert!(v.is_ok());
+    }
 }

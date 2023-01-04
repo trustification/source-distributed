@@ -1,6 +1,6 @@
 use clap::Parser;
 use in_toto::runlib;
-use source_distributed::priv_key_from_pem;
+use source_distributed::private_key_from_file;
 use std::fs;
 use std::path::PathBuf;
 
@@ -21,7 +21,7 @@ struct Args {
     repo_name: String,
 
     #[arg(long, help = "The private key to be used to sign the layout")]
-    private_key: String,
+    private_key: PathBuf,
 
     #[arg(
         short,
@@ -53,8 +53,7 @@ async fn main() {
     let repo_name = args.repo_name;
     println!("Generate in-toto step for {}/{}", org_name, repo_name);
 
-    let private_key_pem = fs::read_to_string(&args.private_key).unwrap();
-    let priv_key = priv_key_from_pem(&private_key_pem).unwrap();
+    let priv_key = private_key_from_file(&args.private_key);
     println!("key_id: {:?}", priv_key.key_id().prefix());
 
     // This is the directory that cloned sources should be in. This is
