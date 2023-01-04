@@ -23,6 +23,7 @@ struct Args {
     repo_name: String,
 
     #[arg(
+        short,
         long,
         help = "The directory to store the artifacts in.",
         default_value = "sscs/in-toto/artifacts"
@@ -30,6 +31,7 @@ struct Args {
     artifacts_dir: PathBuf,
 
     #[arg(
+        short,
         long,
         help = "The number of days that the layout should be valid",
         default_value = "365"
@@ -37,12 +39,14 @@ struct Args {
     valid_days: u64,
 
     #[arg(
+        short,
         long,
         help = "An optional provider token, for example a github access token"
     )]
     provider_token: Option<String>,
 
     #[arg(
+        short,
         long,
         help = "The directory to where the steps will be performed",
         default_value = "sscs/in-toto/work"
