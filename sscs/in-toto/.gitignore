@@ -1,8 +1,0 @@
-artifacts
-artifacts.bundle
-artifacts.tar
-artifacts.sig
-artifacts.crt
-cosign.key.json
-cosign.key.enc
-cosign.key.pub.json
