@@ -59,8 +59,8 @@ pub async fn generate_keypair(token: Option<String>) -> Result<SigStoreKeyPair> 
 }
 
 pub fn create_layout(
-    org_name: &String,
-    repo_name: &String,
+    org_name: &str,
+    repo_name: &str,
     priv_key: &PrivateKey,
     valid_days: u64,
 ) -> in_toto::Result<Metablock> {
@@ -78,7 +78,7 @@ pub fn create_layout(
         .add_step(
             Step::new("clone-project")
                 .threshold(1)
-                .add_expected_product(ArtifactRule::Create(repo_name.as_str().into()))
+                .add_expected_product(ArtifactRule::Create(repo_name.into()))
                 .add_expected_product(ArtifactRule::Allow(
                     VirtualTargetPath::new(format!("{}/*", repo_name)).unwrap(),
                 ))
@@ -159,4 +159,18 @@ pub fn create_layout(
     let signed_metablock_builder =
         MetablockBuilder::from_metadata(Box::new(metadata)).sign(&[&priv_key])?;
     Ok(signed_metablock_builder.build())
+}
+
+pub fn get_github_org_and_name<'a>(url: &'a str) -> anyhow::Result<(&'a str, &'a str)> {
+    if url.starts_with("git") {
+        let org_and_repo = url.split(":").nth(1).unwrap();
+        let org_and_repo = org_and_repo.split(".").nth(0).unwrap();
+        let org = org_and_repo.split("/").nth(0).unwrap();
+        let repo = org_and_repo.split("/").nth(1).unwrap();
+        Ok((org, repo))
+    } else if url.starts_with("https") {
+        Err(anyhow!("github https protocol is not supported yet"))
+    } else {
+        Err(anyhow!("unknown protocol"))
+    }
 }

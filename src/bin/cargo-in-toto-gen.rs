@@ -2,7 +2,9 @@ use cargo::util::Config;
 use clap::Parser;
 use git2::Repository;
 use in_toto::runlib;
-use source_distributed::{create_layout, generate_keypair, priv_key_from_pem};
+use source_distributed::{
+    create_layout, generate_keypair, get_github_org_and_name, priv_key_from_pem,
+};
 use std::fs;
 use std::path::PathBuf;
 
@@ -12,16 +14,6 @@ use std::path::PathBuf;
     long_about = None)]
 /// create-layout generates an in-toto layout.json.
 struct Args {
-    #[arg(
-        short,
-        long,
-        help = "The github organisation that the project/repository belongs to"
-    )]
-    org_name: String,
-
-    #[arg(short, long, help = "The github repository/project")]
-    repo_name: String,
-
     #[arg(
         short,
         long,
@@ -59,15 +51,21 @@ async fn main() {
     let args = Args::parse();
     let _config = Config::default().unwrap();
     let _cargo_home = home::cargo_home().expect("Could not find the cargo home directory");
-    let org_name = args.org_name;
-    let repo_name = args.repo_name;
 
     let repository = Repository::discover(".").unwrap();
     let head = repository.head().unwrap();
     let branch = head.shorthand().unwrap();
     let commit = head.peel_to_commit().unwrap().id();
+
+    let remotes = repository.remotes().unwrap();
+    println!("remotes: {:?}", &remotes.get(0).unwrap());
+    let remote = repository.find_remote(remotes.get(0).unwrap()).unwrap();
+    let url = remote.url().unwrap();
+    let (org_name, repo_name) = get_github_org_and_name(url).unwrap();
     println!("branch: {:?}", &branch);
     println!("commit: {:?}", &commit);
+    println!("org_name: {:?}", &org_name);
+    println!("repo_name: {:?}", &repo_name);
 
     let branch_dir = &args.artifacts_dir.join(branch);
     let work_dir = &branch_dir.join("work");
@@ -125,16 +123,14 @@ async fn main() {
                 "Cargo.toml",
                 "Cargo.lock",
                 "README.md",
-                "src/bin/cargo-verify.rs",
-                "src/bin/cargo-in-toto-gen.rs",
+                "src",
             ],
             &[
                 // products
                 "Cargo.toml",
                 "Cargo.lock",
                 "README.md",
-                "src/bin/cargo-verify.rs",
-                "src/bin/cargo-in-toto-gen.rs",
+                "src",
             ],
             &[
                 "git",
