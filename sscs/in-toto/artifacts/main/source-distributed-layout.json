@@ -1,0 +1,162 @@
+{
+  "signatures": [
+    {
+      "keyid": "20d0ec230c2453cff3939a717f62087e27babada6e99066a97b0ff6adccd586e",
+      "sig": "3045022100a94e533842e4af561b828293f6dd96f365409ba8e19fdef763e065fff663ef2b022077c9775b16a979454f049fec4d58c41238c890095ae8f58f8b8534793a963edf"
+    }
+  ],
+  "signed": {
+    "_type": "layout",
+    "expires": "2024-01-05T12:30:58Z",
+    "readme": "in-toto layout for trustification/source-distributed.",
+    "keys": {
+      "20d0ec230c2453cff3939a717f62087e27babada6e99066a97b0ff6adccd586e": {
+        "keytype": "ecdsa",
+        "scheme": "ecdsa-sha2-nistp256",
+        "keyid_hash_algorithms": [
+          "sha256",
+          "sha512"
+        ],
+        "keyval": {
+          "public": "04866dc619a861f126654a15a0590dfe8e28d719463f5c350810270e57d5dca1dad2594d85adc8c37e6e0657cbd1a14e0fe9c53da8bcecb9fb78bb0373bbc22b5a",
+          "private": ""
+        },
+        "keyid": "20d0ec230c2453cff3939a717f62087e27babada6e99066a97b0ff6adccd586e"
+      }
+    },
+    "steps": [
+      {
+        "_type": "step",
+        "threshold": 1,
+        "name": "clone-project",
+        "expected_materials": [],
+        "expected_products": [
+          [
+            "CREATE",
+            "source-distributed"
+          ],
+          [
+            "ALLOW",
+            "source-distributed/*"
+          ],
+          [
+            "ALLOW",
+            "source-distributed-layout.json"
+          ]
+        ],
+        "pubkeys": [
+          "20d0ec230c2453cff3939a717f62087e27babada6e99066a97b0ff6adccd586e"
+        ],
+        "expected_command": [
+          "git",
+          "clone",
+          "git@github.com:trustification/source-distributed.git"
+        ]
+      },
+      {
+        "_type": "step",
+        "threshold": 1,
+        "name": "run-tests",
+        "expected_materials": [
+          [
+            "MATCH",
+            "source-distributed/*",
+            "WITH",
+            "PRODUCTS",
+            "FROM",
+            "clone-project"
+          ],
+          [
+            "ALLOW",
+            "Cargo.toml"
+          ]
+        ],
+        "expected_products": [
+          [
+            "ALLOW",
+            "Cargo.lock"
+          ],
+          [
+            "ALLOW",
+            "cosign.key.json"
+          ],
+          [
+            "ALLOW",
+            "cosign.key.pub.json"
+          ]
+        ],
+        "pubkeys": [
+          "20d0ec230c2453cff3939a717f62087e27babada6e99066a97b0ff6adccd586e"
+        ],
+        "expected_command": [
+          "cargo",
+          "test",
+          "--manifest-path=source-distributed/Cargo.toml"
+        ]
+      }
+    ],
+    "inspect": [
+      {
+        "_type": "inspection",
+        "name": "cargo-fetch",
+        "expected_materials": [
+          [
+            "MATCH",
+            "source-distributed/*",
+            "WITH",
+            "PRODUCTS",
+            "FROM",
+            "clone-project"
+          ],
+          [
+            "ALLOW",
+            "source-distributed/target"
+          ],
+          [
+            "ALLOW",
+            "cosign.pub"
+          ],
+          [
+            "ALLOW",
+            "source-distributed-layout.json"
+          ]
+        ],
+        "expected_products": [
+          [
+            "MATCH",
+            "source-distributed/Cargo.toml",
+            "WITH",
+            "PRODUCTS",
+            "FROM",
+            "clone-project"
+          ],
+          [
+            "MATCH",
+            "*",
+            "WITH",
+            "PRODUCTS",
+            "FROM",
+            "clone-project"
+          ],
+          [
+            "ALLOW",
+            "source-distributed/target"
+          ],
+          [
+            "ALLOW",
+            "cosign.key.pub.json"
+          ],
+          [
+            "ALLOW",
+            "source-distributed-layout.json"
+          ]
+        ],
+        "run": [
+          "git",
+          "clone",
+          "git@github.com:trustification/source-distributed.git"
+        ]
+      }
+    ]
+  }
+}
