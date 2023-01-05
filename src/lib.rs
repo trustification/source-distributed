@@ -17,6 +17,8 @@ use std::str::FromStr;
 use url::Url;
 use x509_parser::pem::parse_x509_pem;
 
+pub mod steps;
+
 /// Parses the passed in string which is expected to be a private ec key in
 /// pem format, or in securesystemslib json format.
 pub fn priv_key_from_pem(s: &str) -> in_toto::Result<PrivateKey> {
@@ -158,7 +160,13 @@ pub fn create_layout(
 
     let signed_metablock_builder =
         MetablockBuilder::from_metadata(Box::new(metadata)).sign(&[&priv_key])?;
-    Ok(signed_metablock_builder.build())
+    let signed = signed_metablock_builder.build();
+    let verified = signed.verify(1, [priv_key.public()]);
+    if verified.is_err() {
+        eprintln!("Could not verify metadata: {:?}", verified.err());
+        std::process::exit(1);
+    }
+    Ok(signed)
 }
 
 pub fn get_github_org_and_name<'a>(url: &'a str) -> anyhow::Result<(&'a str, &'a str)> {
