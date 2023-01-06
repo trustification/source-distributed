@@ -103,6 +103,7 @@ pub fn copy_all(source: impl AsRef<Path>, destination: impl AsRef<Path>) -> std:
 
 impl InTotoVerify {
     fn verify(artifact_dir: &PathBuf, dependency: &String) {
+        println!("artifact_dir: {:?}", &artifact_dir);
         let verify_dir = Path::new("verify_dir");
         copy_all(artifact_dir, verify_dir).unwrap();
 
