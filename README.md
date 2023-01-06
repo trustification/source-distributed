@@ -12,7 +12,9 @@ To sign a project, the following command can be used:
 $ cargo r --bin cargo-in-toto-gen
 ```
 This will use Sigstore's ephemeral keys (keyless) feature to generate a keypair
-that will then be used to sign the in-toto artifacts.
+that will then be used to sign the in-toto artifacts. The artifacts will be
+stored in [sscs/in-toto/artifacts/<branch>](./sscs/in-toto/artifacts) depending
+on the current branch.
 
 ### Verifying
 To verify a project we need to specify which dependency from Cargo.toml that
