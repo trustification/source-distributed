@@ -1,6 +1,7 @@
 use cargo::util::Config;
 use clap::Parser;
 use git2::Repository;
+use log::{debug, error};
 use source_distributed::steps::{
     clone_project, run_tests, write_layout_to_file, write_step_to_file,
 };
@@ -50,6 +51,7 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
+    env_logger::init();
     let args = Args::parse();
     let _config = Config::default().unwrap();
     let _cargo_home = home::cargo_home().expect("Could not find the cargo home directory");
@@ -73,7 +75,7 @@ async fn main() {
     }
 
     if let Ok(keypair) = generate_keypair(args.provider_token).await {
-        println!(
+        debug!(
             "Generated keypair {:?}",
             &keypair.private_key_to_pem().unwrap()
         );
@@ -105,6 +107,6 @@ async fn main() {
 
         fs::remove_dir_all(&work_dir).unwrap();
     } else {
-        eprintln!("Could not generate keypair");
+        error!("Could not generate keypair");
     }
 }

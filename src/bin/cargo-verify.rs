@@ -8,6 +8,7 @@ use clap::Parser;
 use in_toto::crypto::PublicKey;
 use in_toto::models::Metablock;
 use in_toto::verifylib::in_toto_verify;
+use log::{debug, error, info};
 use serde_json;
 use std::collections::HashMap;
 use std::fmt;
@@ -73,7 +74,7 @@ impl CargoGit {
         let git_remote = GitRemote::new(&self.url);
         let oid = git_remote.rev_for(&self.db_path, &git_ref).unwrap();
         let short = &oid.to_string()[..7];
-        println!("Branch: {} resolved to revision {}\n", &branch, short);
+        debug!("Branch: {} resolved to revision {}\n", &branch, short);
         self.checkouts_path.join(short)
     }
 }
@@ -103,7 +104,7 @@ pub fn copy_all(source: impl AsRef<Path>, destination: impl AsRef<Path>) -> std:
 
 impl InTotoVerify {
     fn verify(artifact_dir: &PathBuf, dependency: &String) {
-        println!("artifact_dir: {:?}", &artifact_dir);
+        debug!("artifact_dir: {:?}", &artifact_dir);
         let verify_dir = Path::new("verify_dir");
         copy_all(artifact_dir, verify_dir).unwrap();
 
@@ -122,8 +123,8 @@ impl InTotoVerify {
         .unwrap();
 
         let key_id = layout.signatures[0].key_id().clone();
-        println!("PublicKey::key_id: {:?}", &pub_key.key_id());
-        println!("Layout:key_id: {:?}", &key_id);
+        debug!("PublicKey::key_id: {:?}", &pub_key.key_id());
+        debug!("Layout:key_id: {:?}", &key_id);
         let layout_keys = HashMap::from([(key_id, pub_key)]);
 
         let current_dir = std::env::current_dir().unwrap();
@@ -131,7 +132,7 @@ impl InTotoVerify {
         //in_toto_verify(&layout, layout_keys, verify_dir.to_str().unwrap(), None)
         in_toto_verify(&layout, layout_keys, ".", None).expect("verify failed");
 
-        println!("Verification succeeded!");
+        info!("Verification succeeded!");
         std::env::set_current_dir(current_dir).unwrap();
         fs::remove_dir_all(verify_dir).unwrap();
     }
@@ -145,7 +146,7 @@ fn verify_cargo_artifact(
 ) {
     let artifacts_dir = src_dir.join(artifacts_path);
     if !artifacts_dir.exists() {
-        eprintln!(
+        error!(
             "Could not perform verification of dependency '{}', an artifacts \
              directory named '{}' could not be found in '{}'\n",
             &dependency_name,
@@ -158,13 +159,14 @@ fn verify_cargo_artifact(
 }
 
 fn main() {
+    env_logger::init();
     let args = Args::parse();
     let dependency_name = args.dependency;
     let config = Config::default().unwrap();
     let cargo_home = home::cargo_home().expect("Could not find the cargo home directory");
 
-    //let current_dir = std::env::current_dir().unwrap();
-    //println!("current_dir: {}", current_dir.display());
+    info!("Verifying {}", &dependency_name);
+
     let manifest_file = fs::read(&args.manifest_path).unwrap();
     let manifest = Manifest::from_slice(&manifest_file).unwrap();
     match manifest.dependencies.get(&dependency_name) {
@@ -178,7 +180,7 @@ fn main() {
             let src_dir = cargo_home.join("registry").join("src").join(dir_name);
             let dep_dir = src_dir.join(format!("{}-{}", dependency_name, version));
             if !dep_dir.exists() {
-                eprintln!("The dependency {} could not be found", dependency_name);
+                error!("The dependency {} could not be found", dependency_name);
                 std::process::exit(1);
             }
             verify_cargo_artifact(&dep_dir, &args.artifacts_path, &version, &dependency_name)
@@ -205,16 +207,16 @@ fn main() {
                     unimplemented!("Revisions are currently not supported");
                 }
             } else {
-                eprintln!("version: {}", &detail.version.as_ref().unwrap());
+                error!("version: {}", &detail.version.as_ref().unwrap());
                 unimplemented!("crates.io deps are currently not supported");
             }
         }
         Some(Dependency::Inherited(detail)) => {
-            eprintln!("Inherited dep: {:?}", detail);
+            error!("Inherited dep: {:?}", detail);
             unimplemented!("Inherited deps are currently not supported");
         }
         None => {
-            eprintln!("Could not find the dependency: {dependency_name} in Cargo.toml");
+            error!("Could not find the dependency: {dependency_name} in Cargo.toml");
             std::process::exit(1);
         }
     }

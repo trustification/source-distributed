@@ -6,6 +6,7 @@ use in_toto::models::rule::{Artifact, ArtifactRule};
 use in_toto::models::step::{Command, Step};
 use in_toto::models::VirtualTargetPath;
 use in_toto::models::{LayoutMetadataBuilder, Metablock, MetablockBuilder};
+use log::{debug, error};
 use openidconnect::core::CoreIdToken;
 use sigstore::crypto::signing_key::SigStoreKeyPair;
 use sigstore::crypto::SigningScheme;
@@ -66,8 +67,8 @@ pub fn create_layout(
     priv_key: &PrivateKey,
     valid_days: u64,
 ) -> in_toto::Result<Metablock> {
-    println!("private keyid: {:?}", priv_key.key_id());
-    println!("public keyid: {:?}", priv_key.public().key_id());
+    debug!("private keyid: {:?}", priv_key.key_id());
+    debug!("public keyid: {:?}", priv_key.public().key_id());
     let expires: DateTime<Utc> = DateTime::from(
         Local::now()
             .checked_add_days(Days::new(valid_days))
@@ -163,7 +164,7 @@ pub fn create_layout(
     let signed = signed_metablock_builder.build();
     let verified = signed.verify(1, [priv_key.public()]);
     if verified.is_err() {
-        eprintln!("Could not verify metadata: {:?}", verified.err());
+        error!("Could not verify metadata: {:?}", verified.err());
         std::process::exit(1);
     }
     Ok(signed)

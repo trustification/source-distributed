@@ -23,6 +23,9 @@ git2 = "0.15.0"
 in-toto = { git = "https://github.com/danbev/in-toto-rs.git", branch="ecdsa-support-with-json" }
 chrono = { version = "0.4", features = [ "serde" ] }
 anyhow = "1.0.68"
+log = "0.4.17"
+env_logger = "0.10.0"
+
 
 source-distributed = { git = "ssh://git@github.com/trustification/source-distributed.git", branch="main" }
 

@@ -22,12 +22,21 @@ we want to verify:
 ```console
 $ cargo r --bin cargo-verify -- -d source-distributed
 ```
+The above will verify that the branch specified for this dependency, in this
+case `main`.
 
 The following option can be used to check a directory that is outside of
 `~/.cargo/git`:
 ```console
 $ cargo r --bin cargo-verify -- -d source-distributed -a sscs/in-toto/artifacts/main -p $PWD
 
+```
+
+### Logging
+Currently logging is done using the log crate and env_logger is the
+implementation used. This can be configured using:
+```console
+$ env RUST_LOG=cargo_in_toto_gen=debug cargo r --bin cargo-in-toto-gen
 ```
 
 ### Running the CI workflow locally

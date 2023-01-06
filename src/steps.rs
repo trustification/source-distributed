@@ -1,6 +1,7 @@
 use in_toto::crypto::PrivateKey;
 use in_toto::models::Metablock;
 use in_toto::runlib;
+use log::info;
 use std::fs;
 use std::path::PathBuf;
 
@@ -39,7 +40,7 @@ pub fn clone_project(
     )
     .unwrap();
 
-    println!("Verify clone-project step...");
+    info!("Verify clone-project step...");
     // TODO: Add a flag to optionally verify the step, but I've found this
     // useful during development as there have been issues with signatures,
     // for example https://github.com/in-toto/in-toto-rs/pull/48.
@@ -60,7 +61,7 @@ pub fn run_tests(priv_key: &PrivateKey, work_dir: &PathBuf) -> anyhow::Result<Me
         Some(&["source-distributed"]),
     )
     .unwrap();
-    println!("Verify run_tests step...");
+    info!("Verify run_tests step...");
     run_tests.verify(1, [priv_key.public()]).unwrap();
     Ok(run_tests)
 }
@@ -73,7 +74,7 @@ pub fn write_layout_to_file(
     let filename = format!("{}/{}-layout.json", &dir.display(), &repo_name);
     let content = serde_json::to_string_pretty(&layout).unwrap();
     fs::write(&filename, content).unwrap();
-    println!("Generate {}/{}-layout.json", &dir.display(), &repo_name);
+    info!("Generate {}/{}-layout.json", &dir.display(), &repo_name);
     Ok(PathBuf::from(&filename))
 }
 
@@ -88,6 +89,6 @@ pub fn write_step_to_file(
     let path = &dir.join(&filename);
     let s = serde_json::to_string_pretty(&json).unwrap();
     fs::write(&path, s).unwrap();
-    println!("Generated {}", path.display());
+    info!("Generated {}", path.display());
     Ok(path.to_path_buf())
 }
