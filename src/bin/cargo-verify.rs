@@ -1,8 +1,6 @@
-use cargo::core::source::GitReference;
 use cargo::core::source::SourceId;
-use cargo::sources::git::GitRemote;
 use cargo::util::hex::short_hash;
-use cargo::util::{CanonicalUrl, Config};
+use cargo::util::Config;
 use cargo_toml::{Dependency, Manifest};
 use clap::Parser;
 use in_toto::crypto::PublicKey;
@@ -10,11 +8,10 @@ use in_toto::models::Metablock;
 use in_toto::verifylib::in_toto_verify;
 use log::{debug, error, info};
 use serde_json;
+use source_distributed::git::CargoGit;
 use std::collections::HashMap;
-use std::fmt;
 use std::fs;
 use std::path::{Path, PathBuf};
-use url::Url;
 
 #[derive(Parser, Debug)]
 #[command(author,
@@ -47,43 +44,6 @@ struct Args {
         help = "Project artifacts directory to use instead of ~/.cargo/git"
     )]
     project_dir: Option<PathBuf>,
-}
-
-struct CargoGit {
-    url: Url,
-    db_path: Box<PathBuf>,
-    checkouts_path: Box<PathBuf>,
-}
-
-impl CargoGit {
-    fn new(repo_url: &str, dependency_name: &String, cargo_home: &Path) -> Self {
-        let url = Url::parse(repo_url).unwrap();
-        let can_url = CanonicalUrl::new(&url).unwrap();
-        let repo_name = format!("{}-{}", dependency_name, short_hash(&can_url));
-        let db_path = cargo_home.join("git").join("db").join(&repo_name);
-        let checkouts_path = cargo_home.join("git").join("checkouts").join(&repo_name);
-        Self {
-            url,
-            db_path: Box::new(db_path),
-            checkouts_path: Box::new(checkouts_path),
-        }
-    }
-
-    fn rev_directory(&self, branch: &String) -> PathBuf {
-        let git_ref = GitReference::Branch(branch.to_string());
-        let git_remote = GitRemote::new(&self.url);
-        let oid = git_remote.rev_for(&self.db_path, &git_ref).unwrap();
-        let short = &oid.to_string()[..7];
-        debug!("Branch: {} resolved to revision {}\n", &branch, short);
-        self.checkouts_path.join(short)
-    }
-}
-
-impl fmt::Display for CargoGit {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        writeln!(f, "git_db_path: {}", &self.db_path.display())?;
-        write!(f, "git_checkouts_path: {}", &self.checkouts_path.display())
-    }
 }
 
 struct InTotoVerify {}
