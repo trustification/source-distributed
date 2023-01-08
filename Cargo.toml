@@ -37,9 +37,9 @@ name = "source_distributed"
 path = "src/lib.rs"
 
 [[bin]]
-name = "cargo-in-toto-gen"
-path = "src/bin/cargo-in-toto-gen.rs"
+name = "cargo-in-toto-sign"
+path = "src/bin/cargo-in-toto-sign.rs"
 
 [[bin]]
-name = "cargo-verify"
-path = "src/bin/cargo-verify.rs"
+name = "cargo-in-toto-verify"
+path = "src/bin/cargo-in-toto-verify.rs"

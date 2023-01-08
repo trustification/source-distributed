@@ -18,12 +18,12 @@ pushd ../../ > /dev/null
 ## Generate in-toto layout and link files
 if [ -z $GITHUB_TOKEN ]; then
 	echo "Generating without token...."
-	cargo r --bin cargo-in-toto-gen
+	cargo r --bin cargo-in-toto-sign
 else
 	echo "Generating with token...."
-	cargo r --bin cargo-in-toto-gen --provider-token=$GITHUB_TOKEN
+	cargo r --bin cargo-in-toto-sign --provider-token=$GITHUB_TOKEN
 fi
 
-cargo r --bin cargo-verify -- -d $GITHUB_PROJECT -a sscs/in-toto/artifacts/$BRANCH -p $PWD
+cargo r --bin cargo-in-toto-verify -- -d $GITHUB_PROJECT -a sscs/in-toto/artifacts/$BRANCH -p $PWD
 
 popd > /dev/null
