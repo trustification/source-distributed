@@ -20,7 +20,7 @@ if [ -z $GITHUB_TOKEN ]; then
 	cargo r --bin cargo-in-toto-sign
 else
 	echo "Generating with token...."
-	cargo r --bin cargo-in-toto-sign --provider-token=$GITHUB_TOKEN
+	cargo r --bin cargo-in-toto-sign -- --provider-token=$GITHUB_TOKEN
 fi
 
 cargo r --bin cargo-in-toto-verify -- -c
