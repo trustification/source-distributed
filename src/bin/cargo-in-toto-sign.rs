@@ -2,6 +2,7 @@ use cargo::util::Config;
 use clap::Parser;
 use git2::Repository;
 use log::{debug, error};
+use source_distributed::cargo::filter_args;
 use source_distributed::crypto::{generate_keypair, priv_key_from_pem};
 use source_distributed::git::get_github_org_and_name;
 use source_distributed::layout::create_layout;
@@ -58,7 +59,7 @@ fn create_dir_if_missing(path: &Path) {
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    let args = Args::parse();
+    let args = Args::parse_from(filter_args("in-toto-verify"));
     let _config = Config::default().unwrap();
     let _cargo_home = home::cargo_home().expect("Could not find the cargo home directory");
 

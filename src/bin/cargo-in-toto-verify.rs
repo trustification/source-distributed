@@ -9,6 +9,7 @@ use in_toto::models::Metablock;
 use in_toto::verifylib::in_toto_verify;
 use log::{debug, error, info};
 use serde_json;
+use source_distributed::cargo::filter_args;
 use source_distributed::git::get_github_org_and_name;
 use source_distributed::git::CargoGit;
 use std::collections::HashMap;
@@ -134,7 +135,7 @@ fn verify_cargo_artifact(
 
 fn main() {
     env_logger::init();
-    let args = Args::parse();
+    let args = Args::parse_from(filter_args("in-toto-verify"));
 
     if args.current_project == true {
         info!("Verifying current project");

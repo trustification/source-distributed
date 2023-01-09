@@ -37,6 +37,36 @@ option can be specified:
 $ cargo r --bin cargo-in-toto-verify -- -current-project
 ```
 
+### Installing
+The binaries can be installed using the following command:
+```console
+$ cargo install --path .
+```
+And then be run using:
+```console
+$ cargo in-toto-verify --help
+cargo-verify is a tool that verifies a project somehow...
+
+Usage: cargo-in-toto-verify [OPTIONS]
+
+Options:
+  -m, --manifest-path <MANIFEST_PATH>
+          Path to Cargo.toml file to use [default: Cargo.toml]
+  -d, --dependency <DEPENDENCY>
+          The dependency to verify
+  -a, --artifacts-path <ARTIFACTS_PATH>
+          The path to the artifacts directory in the project to verify [default: sscs/in-toto/artifacts]
+  -p, --project-dir <PROJECT_DIR>
+          Project artifacts directory to use instead of ~/.cargo/git
+  -c, --current-project
+          Verify the current project instead of a dependency
+  -h, --help
+          Print help information
+  -V, --version
+          Print version information
+
+```
+
 ### Logging
 Currently logging is done using the log crate and env_logger is the
 implementation used. This can be configured using:
