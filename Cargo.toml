@@ -7,7 +7,7 @@ license = "MIT OR Apache-2.0"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-clap = { version = "4.0.13", features = ["derive"] }
+clap = { version = "4.0.32", features = ["derive"] }
 serde_json = "1.0.85"
 sigstore = { version = "0.6.0", default-features = false, features = ["rustls-tls"] }
 url = "2.2.2"
@@ -25,12 +25,6 @@ chrono = { version = "0.4", features = [ "serde" ] }
 anyhow = "1.0.68"
 log = "0.4.17"
 env_logger = "0.10.0"
-
-
-source-distributed = { git = "ssh://git@github.com/trustification/source-distributed.git", branch="main" }
-
-[dev-dependencies]
-k8s-openapi = { version = "0.16.0", default-features = false, features = ["v1_24"] }
 
 [lib]
 name = "source_distributed"

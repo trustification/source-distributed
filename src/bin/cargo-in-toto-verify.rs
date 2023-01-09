@@ -3,11 +3,13 @@ use cargo::util::hex::short_hash;
 use cargo::util::Config;
 use cargo_toml::{Dependency, Manifest};
 use clap::Parser;
+use git2::Repository;
 use in_toto::crypto::PublicKey;
 use in_toto::models::Metablock;
 use in_toto::verifylib::in_toto_verify;
 use log::{debug, error, info};
 use serde_json;
+use source_distributed::git::get_github_org_and_name;
 use source_distributed::git::CargoGit;
 use std::collections::HashMap;
 use std::fs;
@@ -27,8 +29,13 @@ struct Args {
     )]
     manifest_path: String,
 
-    #[arg(short, long, help = "The dependency to verify")]
-    dependency: String,
+    #[arg(
+        short,
+        long,
+        help = "The dependency to verify",
+        required_unless_present("current_project")
+    )]
+    dependency: Option<String>,
 
     #[arg(
         short,
@@ -44,6 +51,13 @@ struct Args {
         help = "Project artifacts directory to use instead of ~/.cargo/git"
     )]
     project_dir: Option<PathBuf>,
+
+    #[arg(
+        short,
+        long,
+        help = "Verify the current project instead of a dependency"
+    )]
+    current_project: bool,
 }
 
 struct InTotoVerify {}
@@ -64,7 +78,6 @@ pub fn copy_all(source: impl AsRef<Path>, destination: impl AsRef<Path>) -> std:
 
 impl InTotoVerify {
     fn verify(artifact_dir: &PathBuf, dependency: &String) {
-        debug!("artifact_dir: {:?}", &artifact_dir);
         let verify_dir = Path::new("verify_dir");
         copy_all(artifact_dir, verify_dir).unwrap();
 
@@ -92,7 +105,7 @@ impl InTotoVerify {
         //in_toto_verify(&layout, layout_keys, verify_dir.to_str().unwrap(), None)
         in_toto_verify(&layout, layout_keys, ".", None).expect("verify failed");
 
-        info!("Verification succeeded!");
+        println!("Verification succeeded!");
         std::env::set_current_dir(current_dir).unwrap();
         fs::remove_dir_all(verify_dir).unwrap();
     }
@@ -101,10 +114,10 @@ impl InTotoVerify {
 fn verify_cargo_artifact(
     src_dir: &PathBuf,
     artifacts_path: &str,
-    _artifact_name: &str,
+    branch: &str,
     dependency_name: &str,
 ) {
-    let artifacts_dir = src_dir.join(artifacts_path);
+    let artifacts_dir = src_dir.join(artifacts_path).join(branch);
     if !artifacts_dir.exists() {
         error!(
             "Could not perform verification of dependency '{}', an artifacts \
@@ -115,13 +128,32 @@ fn verify_cargo_artifact(
         );
         std::process::exit(1);
     }
+    println!("artifacts_dir: {:?}", &artifacts_dir);
     InTotoVerify::verify(&artifacts_dir, &dependency_name.to_string());
 }
 
 fn main() {
     env_logger::init();
     let args = Args::parse();
-    let dependency_name = args.dependency;
+
+    if args.current_project == true {
+        info!("Verifying current project");
+        let dep_dir = std::env::current_dir().unwrap();
+        let repository = Repository::discover(".").unwrap();
+        let head = repository.head().unwrap();
+        let branch = head.shorthand().unwrap();
+        let remotes = repository.remotes().unwrap();
+        let remote = repository.find_remote(remotes.get(0).unwrap()).unwrap();
+        let url = remote.url().unwrap();
+        let (_, repo_name) = get_github_org_and_name(url).unwrap();
+        println!("dep_dir: {:?}", &dep_dir);
+        println!("repo_name: {:?}", &repo_name);
+        println!("branch: {:?}", &branch);
+        verify_cargo_artifact(&dep_dir, &args.artifacts_path, branch, &repo_name);
+        std::process::exit(1);
+    }
+
+    let dependency_name = args.dependency.unwrap();
     let config = Config::default().unwrap();
     let cargo_home = home::cargo_home().expect("Could not find the cargo home directory");
 

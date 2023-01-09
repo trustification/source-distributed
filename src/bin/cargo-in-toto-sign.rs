@@ -9,7 +9,7 @@ use source_distributed::steps::{
     clone_project, run_tests, write_layout_to_file, write_step_to_file,
 };
 use std::fs;
-use std::path::PathBuf;
+use std::path::{Path, PathBuf};
 
 #[derive(Parser, Debug)]
 #[command(author,
@@ -49,6 +49,12 @@ struct Args {
     work_dir: PathBuf,
 }
 
+fn create_dir_if_missing(path: &Path) {
+    if !path.exists() {
+        fs::create_dir(&path).expect(format!("Could not create directory {:?}", &path).as_str());
+    }
+}
+
 #[tokio::main]
 async fn main() {
     env_logger::init();
@@ -66,13 +72,19 @@ async fn main() {
     let url = remote.url().unwrap();
     let (org_name, repo_name) = get_github_org_and_name(url).unwrap();
 
-    let branch_dir = &args.artifacts_dir.join(branch);
-    let work_dir = &branch_dir.join("work");
+    let sscs_dir = Path::new("sscs");
+    create_dir_if_missing(sscs_dir);
+    let in_toto_dir = sscs_dir.join("in-toto");
+    create_dir_if_missing(&in_toto_dir);
 
-    if !branch_dir.exists() {
-        fs::create_dir(&branch_dir)
-            .expect(format!("Could not create branch_dir {:?}", &branch_dir).as_str());
-    }
+    println!("artifacts_dir: {:?}", &args.artifacts_dir);
+    create_dir_if_missing(&args.artifacts_dir);
+    let branch_dir = &args.artifacts_dir.join(branch);
+    create_dir_if_missing(&branch_dir);
+    println!("branch_dir: {:?}", &branch_dir);
+    let work_dir = &branch_dir.join("work");
+    create_dir_if_missing(&work_dir);
+    println!("work_dir: {:?}", &work_dir);
 
     if let Ok(keypair) = generate_keypair(args.provider_token).await {
         debug!(

@@ -29,7 +29,12 @@ The following option can be used to check a directory that is outside of
 `~/.cargo/git`:
 ```console
 $ cargo r --bin cargo-in-toto-verify -- -d source-distributed -a sscs/in-toto/artifacts/main -p $PWD
+```
 
+To verify the current project instead of a dependency the `--current-project`
+option can be specified:
+```console
+$ cargo r --bin cargo-in-toto-verify -- -current-project
 ```
 
 ### Logging

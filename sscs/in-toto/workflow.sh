@@ -24,6 +24,6 @@ else
 	cargo r --bin cargo-in-toto-sign --provider-token=$GITHUB_TOKEN
 fi
 
-cargo r --bin cargo-in-toto-verify -- -d $GITHUB_PROJECT -a sscs/in-toto/artifacts/$BRANCH -p $PWD
+cargo r --bin cargo-in-toto-verify -- -c
 
 popd > /dev/null
