@@ -59,7 +59,7 @@ fn create_dir_if_missing(path: &Path) {
 #[tokio::main]
 async fn main() {
     env_logger::init();
-    let args = Args::parse_from(filter_args("in-toto-verify"));
+    let args = Args::parse_from(filter_args("in-toto-sign"));
     let _config = Config::default().unwrap();
     let _cargo_home = home::cargo_home().expect("Could not find the cargo home directory");
 
