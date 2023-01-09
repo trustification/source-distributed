@@ -48,6 +48,6 @@ jobs:
       - name: in-toto process
         working-directory: sscs/in-toto
         run: |
-          ./workflow.sh ${{ github.event.repository.name }} ${{ steps.token.outputs.oidc_token }}
+          ./workflow.sh ${{ steps.token.outputs.oidc_token }}
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock # This is only required while the project is private

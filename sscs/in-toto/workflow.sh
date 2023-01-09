@@ -4,14 +4,13 @@
 #
 # Output will be produced in the artifacts directory which includes the link
 # files, the layout, and the public key.
-GITHUB_PROJECT="${2:-source-distributed}"
-GITHUB_TOKEN=$3
+GITHUB_TOKEN=$1
 PRIVATE_KEY=cosign.key
 PUBLIC_KEY=${PRIVATE_KEY}.pub.json
 
 BRANCH=$(git branch --show-current)
 
-echo "workflow.sh arguments: $GITHUB_PROJECT $GITHUB_TOKEN"
+echo "workflow.sh arguments: $GITHUB_TOKEN"
 
 pushd ../../ > /dev/null
 
