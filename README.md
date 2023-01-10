@@ -6,37 +6,6 @@ sign and verify source distributed project artifacts.
 For more more background information please see [notes.md](./notes.md) which
 documents some of issues we ran into while doing our investiation.
 
-### Signing/Generating
-To sign a project, the following command can be used:
-```console
-$ cargo r --bin cargo-in-toto-sign
-```
-This will use Sigstore's ephemeral keys (keyless) feature to generate a keypair
-that will then be used to sign the in-toto artifacts. The artifacts will be
-stored in [sscs/in-toto/artifacts/<branch>](./sscs/in-toto/artifacts) depending
-on the current branch.
-
-### Verifying
-To verify a project we need to specify which dependency from Cargo.toml that
-we want to verify:
-```console
-$ cargo r --bin cargo-in-toto-verify -- -d source-distributed
-```
-The above will verify that the branch specified for this dependency, in this
-case `main`.
-
-The following option can be used to check a directory that is outside of
-`~/.cargo/git`:
-```console
-$ cargo r --bin cargo-in-toto-verify -- -d source-distributed -a sscs/in-toto/artifacts/main -p $PWD
-```
-
-To verify the current project instead of a dependency the `--current-project`
-option can be specified:
-```console
-$ cargo r --bin cargo-in-toto-verify -- -current-project
-```
-
 ### Installing
 The binaries can be installed using the following command:
 ```console
@@ -64,14 +33,44 @@ Options:
           Print help information
   -V, --version
           Print version information
+```
 
+### Signing/Generating
+To sign a project, the following command can be used:
+```console
+$ cargo in-toto-sign
+```
+This will use Sigstore's ephemeral keys (keyless) feature to generate a keypair
+that will then be used to sign the in-toto artifacts. The artifacts will be
+stored in [sscs/in-toto/artifacts/<branch>](./sscs/in-toto/artifacts) depending
+on the current branch.
+
+### Verifying
+To verify a project we need to specify which dependency from Cargo.toml that
+we want to verify:
+```console
+$ cargo in-toto-verify -- -d source-distributed
+```
+The above will verify that the branch specified for this dependency, in this
+case `main`.
+
+The following option can be used to check a directory that is outside of
+`~/.cargo/git`:
+```console
+$ cargo in-toto-verify -- -d source-distributed -a sscs/in-toto/artifacts/main -p $PWD
+```
+
+To verify the current project instead of a dependency the `--current-project`
+option can be specified:
+```console
+$ cargo in-toto-verify -- -c
 ```
 
 ### Logging
 Currently logging is done using the log crate and env_logger is the
 implementation used. This can be configured using:
 ```console
-$ env RUST_LOG=cargo_in_toto_signn=debug cargo r --bin cargo-in-toto-sign
+$ env RUST_LOG=cargo_in_toto_sign=debug cargo r --bin cargo-in-toto-sign
 ```
 
 ### Running the CI workflow locally
