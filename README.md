@@ -3,8 +3,11 @@ This project contains some example code developed while investigating how
 source distrubted Rust projects might be able to use Sigstore, and in-toto, to
 sign and verify source distributed project artifacts.
 
+The goals is to provide a tools that can be used to add Secure Supply Chain
+Security (SSCS) artifacts to a project.
+
 For more more background information please see [notes.md](./notes.md) which
-documents some of issues we ran into while doing our investiation.
+documents some of issues we ran into while doing our investigations.
 
 ### Installing
 The binaries can be installed using the following command:
@@ -14,35 +17,16 @@ $ cargo install --path .
 And then be run using:
 ```console
 $ cargo in-toto-verify --help
-cargo-verify is a tool that verifies a project somehow...
-
-Usage: cargo-in-toto-verify [OPTIONS]
-
-Options:
-  -m, --manifest-path <MANIFEST_PATH>
-          Path to Cargo.toml file to use [default: Cargo.toml]
-  -d, --dependency <DEPENDENCY>
-          The dependency to verify
-  -a, --artifacts-path <ARTIFACTS_PATH>
-          The path to the artifacts directory in the project to verify [default: sscs/in-toto/artifacts]
-  -p, --project-dir <PROJECT_DIR>
-          Project artifacts directory to use instead of ~/.cargo/git
-  -c, --current-project
-          Verify the current project instead of a dependency
-  -h, --help
-          Print help information
-  -V, --version
-          Print version information
 ```
 
 ### Signing/Generating
-To sign a project, the following command can be used:
+To generate and sign artifacts of a project, the following command can be used:
 ```console
 $ cargo in-toto-sign
 ```
 This will use Sigstore's ephemeral keys (keyless) feature to generate a keypair
 that will then be used to sign the in-toto artifacts. The artifacts will be
-stored in [sscs/in-toto/artifacts/<branch>](./sscs/in-toto/artifacts) depending
+stored in [sscs/in-toto/artifacts/branch](./sscs/in-toto/artifacts) depending
 on the current branch.
 
 ### Verifying
