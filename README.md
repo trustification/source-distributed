@@ -4,7 +4,9 @@ source distrubted Rust projects might be able to use Sigstore, and in-toto, to
 sign and verify source distributed project artifacts.
 
 The goals is to provide a tools that can be used to add Secure Supply Chain
-Security (SSCS) artifacts to a project.
+Security (SSCS) artifacts to a project. The in-toto steps that are generated are
+a clone of the project, and running of the projects tests. The in-toto layout
+generated will allow for these steps to be verified.
 
 For more more background information please see [notes.md](./notes.md) which
 documents some of issues we ran into while doing our investigations.
