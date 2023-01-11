@@ -27,11 +27,12 @@ $ cargo in-toto-sign
 This will use Sigstore's ephemeral keys (keyless) feature to generate a keypair
 that will then be used to sign the in-toto artifacts. The artifacts will be
 stored in [sscs/in-toto/artifacts/branch](./sscs/in-toto/artifacts) depending
-on the current branch.
+on the current branch. These files should be checked in and they will later be
+used when verifying.
 
 ### Verifying
 To verify a project we need to specify which dependency from Cargo.toml that
-we want to verify:
+is to be verified:
 ```console
 $ cargo in-toto-verify -- -d source-distributed
 ```
