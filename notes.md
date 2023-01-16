@@ -249,7 +249,7 @@ So far we have worked out how we might work with git dependencies (only
 supporting branches for now), so lets take a look at how we could do the same
 thing but with a dependency from crates.io.
 
-The dependencies from crates.io are located in `/.cargo/registry`:
+The local dependencies from crates.io are located in `/.cargo/registry`:
 ```console
 $ ls ~/.cargo/registry/
 cache  CACHEDIR.TAG  index  src
@@ -260,15 +260,99 @@ $ ls ~/.cargo/registry/index/
 github.com-1ecc6299db9ec823
 ```
 
-We are interested in the `src` directory:
-```console
-$ ls ~/.cargo/registry/src/
-github.com-1ecc6299db9ec823
-```
 Now this was a little confusing to me as I did not expect a github.com directory
 here. It turns out that Cargo communicates with registries through a github
 repository which is called the `Index`.
 One such github repository can is https://github.com/rust-lang/crates.io-index.
+
+Lets clone this index and take a look at it:
+```console
+$ git clone https://github.com/rust-lang/crates.io-index.git
+$ cd crates.io-index/
+```
+If we list the contents of this directory we will see a number of subdirectories
+starting with one or two characters/symbols/numbers. And there is also a
+`config.json` file.
+
+Now, notice that this index does not contain any crates:
+```console
+$ find . -name '*.crate' | wc -l
+0
+```
+Instead what the index stores is a list of versions for all known packages. Each
+crate will have a single file and there will be an entry in this file forward
+each version.
+
+Lets take a look at the `drg` crate:
+```console
+$ cat 3/d/drg 
+{"name":"drg","vers":"0.1.0","deps":[],"cksum":"c6bfa8b0b1bcd485d5f783e77faf13ba9453e7ab78991936e50d6cfdca23d647","features":{},"yanked":true}
+{"name":"drg","vers":"0.2.1","deps":[{"name":"anyhow","req":"^1.0","features":[],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"chrono","req":"^0.4","features":["serde"],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"clap","req":"^2.33.3","features":[],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"oauth2","req":"^3.0","features":[],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"qstring","req":"^0.7.2","features":[],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"reqwest","req":"^0.11","features":["blocking","json"],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"serde","req":"^1.0","features":["derive"],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"serde_json","req":"^1.0","features":[],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"strum","req":"^0.20","features":[],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"strum_macros","req":"^0.20","features":[],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"tempfile","req":"^3.2.0","features":[],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"tiny_http","req":"^0.8.0","features":[],"optional":false,"default_features":true,"target":null,"kind":"normal"},{"name":"url","req":"^2.2.1","features":["serde"],"optional":false,"default_features":true,"target":null,"kind":"normal"}],"cksum":"cfb067bfabd64c3b4732a3afd2b9a757a88120f6dac6400eae5b865732be0404","features":{},"yanked":false}
+...
+```
+Notice that there are three directories named `1`, `2`, and `3` which are for
+crates that have one, two, or three letters/characters in their name. This is
+the case with `drg` above.  
+
+For other crates with longer names, the first directory matches the first two
+characters of the crate, and the subdirectory under that will have another
+directory matching the following two characters of the crate name. 
+For example, if we want to find the `drogue-device` crate we would search for
+`dr` as the first directory, and then `og` as the subdirectory:
+```console
+$ cat ./dr/og/drogue-device | jq
+{
+  "name": "drogue-device",
+  "vers": "0.0.0",
+  "deps": [],
+  "cksum": "2acc1a9827b5cd933ebef9824415789012f5202b6bcacddaae2c214486ac996a",
+  "features": {},
+  "yanked": false
+}
+```
+When new versions of this crate are released a new entry/line in this file will
+be created. 
+
+Alright, so we now have an effecient way to look up a crate version and its
+dependencies but we haven't seen any crates yet.  This is where the file
+`config.json` comes in to play:
+```console
+$ cat config.json 
+{
+  "dl": "https://crates.io/api/v1/crates",
+  "api": "https://crates.io"
+}
+```
+`dl` stands for `download` and is the url that can be used to download a
+specific crate to the `.cargo/registry/github.com-1ecc6299db9ec823` directory.
+```console
+$ curl -v -L https://crates.io/api/v1/crates/drg/0.1.0/download --output drg-0.0.1.crate
+```
+And we should then be able to list the content of this crate:
+```console
+$ tar tvf drg-0.0.1.crate 
+-rw-r--r-- 0/0              74 2021-03-18 15:57 drg-0.1.0/.cargo_vcs_info.json
+-rw-r--r-- 110147/110147     8 2021-03-18 15:55 drg-0.1.0/.gitignore
+-rw-r--r-- 0/0             134 2021-03-18 15:57 drg-0.1.0/Cargo.lock
+-rw-r--r-- 0/0             754 2021-03-18 15:57 drg-0.1.0/Cargo.toml
+-rw-r--r-- 110147/110147   327 2021-03-18 15:56 drg-0.1.0/Cargo.toml.orig
+-rw-r--r-- 110147/110147    45 2021-03-18 15:55 drg-0.1.0/src/main.rs
+```
+So the `.cargo/registry/github.com-1ecc6299db9ec823` will only contain the
+download crates, the .crate compressed tar files. These never change for a
+versions so they don't have to be downloaded again.
+
+Updates to the index are fairly cheap, just like a normal git fetch and a
+git fast forward. 
+
+
+We are interested in the `src` directory which is the directory into which
+the download crates in the cache director are unpacked:
+```console
+$ ls ~/.cargo/registry/src/
+github.com-1ecc6299db9ec823
+```
+
 The hash following the host is the hash of a `SourceId` instance:
 ```rust
     let registry_id = SourceId::crates_io(&config).unwrap();
