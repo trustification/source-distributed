@@ -259,11 +259,10 @@ There can be multiple registries which are located in the index directory:
 $ ls ~/.cargo/registry/index/
 github.com-1ecc6299db9ec823
 ```
-
 Now this was a little confusing to me as I did not expect a github.com directory
 here. It turns out that Cargo communicates with registries through a github
-repository which is called the `Index`.
-One such github repository can is https://github.com/rust-lang/crates.io-index.
+repository which is called the `Index`. One such github repository is
+https://github.com/rust-lang/crates.io-index.
 
 Lets clone this index and take a look at it:
 ```console
