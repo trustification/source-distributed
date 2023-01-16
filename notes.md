@@ -312,6 +312,9 @@ $ cat ./dr/og/drogue-device | jq
 When new versions of this crate are released a new entry/line in this file will
 be created. 
 
+Updates to the index are fairly cheap, just like a normal git fetch and a
+git fast forward. 
+
 Alright, so we now have an effecient way to look up a crate version and its
 dependencies but we haven't seen any crates yet.  This is where the file
 `config.json` comes in to play:
@@ -337,13 +340,9 @@ $ tar tvf drg-0.0.1.crate
 -rw-r--r-- 110147/110147   327 2021-03-18 15:56 drg-0.1.0/Cargo.toml.orig
 -rw-r--r-- 110147/110147    45 2021-03-18 15:55 drg-0.1.0/src/main.rs
 ```
-So the `.cargo/registry/github.com-1ecc6299db9ec823` will only contain the
-download crates, the .crate compressed tar files. These never change for a
+So the `.cargo/registry/cache/github.com-1ecc6299db9ec823` will only contain the
+downloaded crates, the `.crate` compressed tar files. These never change for a
 versions so they don't have to be downloaded again.
-
-Updates to the index are fairly cheap, just like a normal git fetch and a
-git fast forward. 
-
 
 We are interested in the `src` directory which is the directory into which
 the download crates in the cache director are unpacked:
