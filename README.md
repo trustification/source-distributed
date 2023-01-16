@@ -99,3 +99,89 @@ $ ./workflow
 ```
 The output of the command will then be available in
 [artifacts](./sscs/in-toto/artifacts).
+
+### `cargo sign` vs `in-toto-sign`
+But what about the efforts that are underway to enable signing of a crate upon
+publishing it, and then being able to verify the crate by a consumer, is this
+not duplicating that effort?  
+With the signing of crates, that is performed upon publishing the crate to
+crates.io and it is the `.crate` tar file that is signed, but there is still a
+possiblity that the sources published do not match the sources in git. in-toto
+can add this extra level of verification making sure that the sources actually
+match.
+
+For example, lets create a new cargo crate and run the `cargo package` command:
+```console
+$ cargo new cargo-package && cd cargo-package
+$ cargo package --allow-dirty
+warning: manifest has no description, license, license-file, documentation, homepage or repository.
+See https://doc.rust-lang.org/cargo/reference/manifest.html#package-metadata for more info.
+   Packaging cargo-package v0.1.0 (/home/danielbevenius/work/rust/learning-rust/cargo-package)
+   Verifying cargo-package v0.1.0 (/home/danielbevenius/work/rust/learning-rust/cargo-package)
+   Compiling cargo-package v0.1.0 (/home/danielbevenius/work/rust/learning-rust/cargo-package/target/package/cargo-package-0.1.0)
+    Finished dev [unoptimized + debuginfo] target(s) in 0.43s
+```
+This will create a .crate file:
+```console
+$ file target/package/cargo-package-0.1.0.crate 
+target/package/cargo-package-0.1.0.crate: gzip compressed data, was "cargo-package-0.1.0.crate", max compression, original size modulo 2^32 5632
+```
+We can list the contents of this using:
+```console
+$ tar tvf target/package/cargo-package-0.1.0.crate 
+-rw-r--r-- 0/0             157 1970-01-01 01:00 cargo-package-0.1.0/Cargo.lock
+-rw-r--r-- 0/0             551 1970-01-01 01:00 cargo-package-0.1.0/Cargo.toml
+-rw-r--r-- 0/0             182 2006-07-24 03:21 cargo-package-0.1.0/Cargo.toml.orig
+-rw-r--r-- 0/0              45 2006-07-24 03:21 cargo-package-0.1.0/src/main.rs
+```
+Now, we can sign the crate using Sigstore (which is similar to what `cargo sign`
+will do later I think):
+```console
+$ COSIGN_EXPERIMENTAL=1 cosign sign-blob --bundle=artifact.bundle target/package/cargo-package-0.1.0.crate 
+Using payload from: target/package/cargo-package-0.1.0.crate
+Generating ephemeral keys...
+Retrieving signed certificate...
+
+        Note that there may be personally identifiable information associated with this signed artifact.
+        This may include the email address associated with the account with which you authenticate.
+        This information will be used for signing this artifact and will be stored in public transparency logs and cannot be removed later.
+        By typing 'y', you attest that you grant (or have permission to grant) and agree to have this information stored permanently in transparency logs.
+
+Are you sure you want to continue? (y/[N]): y
+Your browser will now be opened to:
+https://oauth2.sigstore.dev/auth/auth?access_type=online&client_id=sigstore&code_challenge=nJDxvWxIEpmabcifrNS3R-RJmqsFjoSVaZHv7UnHE8I&code_challenge_method=S256&nonce=2KOpTiqUq7K2RlSefOmbC0oYMap&redirect_uri=http%3A%2F%2Flocalhost%3A41853%2Fauth%2Fcallback&response_type=code&scope=openid+email&state=2KOpTjJ8js64nxydUHDgitnA7Pt
+Successfully verified SCT...
+using ephemeral certificate:
+-----BEGIN CERTIFICATE-----
+MIICpzCCAi6gAwIBAgIUPFVeebq5GpWjWa5AyAlwTqDDmYowCgYIKoZIzj0EAwMw
+NzEVMBMGA1UEChMMc2lnc3RvcmUuZGV2MR4wHAYDVQQDExVzaWdzdG9yZS1pbnRl
+cm1lZGlhdGUwHhcNMjMwMTE2MDc1MTM3WhcNMjMwMTE2MDgwMTM3WjAAMFkwEwYH
+KoZIzj0CAQYIKoZIzj0DAQcDQgAE2a8bkOVFPkJK/7MyjKkeOgh6f8g3/X9Hs2oL
+7djTmTQpNAiSeVqkgolQaodIrebaK74kmEKgXnGr5oImAVMIMaOCAU0wggFJMA4G
+A1UdDwEB/wQEAwIHgDATBgNVHSUEDDAKBggrBgEFBQcDAzAdBgNVHQ4EFgQU0fpg
+WH23kDbBwS1a+rlDjCPOvLAwHwYDVR0jBBgwFoAU39Ppz1YkEZb5qNjpKFWixi4Y
+ZD8wJwYDVR0RAQH/BB0wG4EZZGFuaWVsLmJldmVuaXVzQGdtYWlsLmNvbTAsBgor
+BgEEAYO/MAEBBB5odHRwczovL2dpdGh1Yi5jb20vbG9naW4vb2F1dGgwgYoGCisG
+AQQB1nkCBAIEfAR6AHgAdgDdPTBqxscRMmMZHhyZZzcCokpeuN48rf+HinKALynu
+jgAAAYW5j/TGAAAEAwBHMEUCIQDwKj93qIqj8Cx5hP/ysY5v2jlPZHiXALFDll43
+z45HGQIgLiJi0nXo3qdBrnGkrr71jI+EiEtLbDG4kiqqkO+oXZcwCgYIKoZIzj0E
+AwMDZwAwZAIwJAdhcu5gF6kks5U/giqgyshGRVkz4/i99n64EC3qgl+XKe4THsZJ
+xH7Yfv2WSAFiAjB/hs2fJC+tVndrCN7o6gaZp8lWgsfCtygXxHvZ3y5JW8nhqYAI
+wCz0ypm111rsbAw=
+-----END CERTIFICATE-----
+
+tlog entry created with index: 11275062
+Bundle wrote in the file artifact.bundle
+MEUCIQDenV8e18eK3iaD05zEcJ2jjlWzpDG6bRaQzZrEymSCuwIgdqElIl38QqZXT9OxbZGQqWKSk1W5hJH3rScDcdSislE=
+```
+So this has produced a signature of the crate, the tar file. The crate would
+then be published to crates.io and available to consumers.
+
+Now, lets say I'm a malicious hacker and I run `cargo package` and then update
+the .crate file with modified sources, or just craft my own tar file. I would
+still be able to sign the .crate and publish it. A consumer would have no reason
+not to trust this crate and verification of it would still pass.
+
+
+
+
