@@ -182,6 +182,10 @@ the .crate file with modified sources, or just craft my own tar file. I would
 still be able to sign the .crate and publish it. A consumer would have no reason
 not to trust this crate and verification of it would still pass.
 
+For this situation a like this one can use a trusted CI builder, for example
+a system that supports OIDC workload identities. These can verify the sources
+and assurance that the sources have not been modified.
+
 
 
 
