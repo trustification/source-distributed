@@ -187,5 +187,17 @@ a system that supports OIDC workload identities. These can verify the sources
 and assurance that the sources have not been modified.
 
 
+### Print git project hash
+There is a utility program in this project that accepts a github https url and
+prints the Cargo hash for that project. The intention is to show how the
+directory names in `.cargo/git/` are created. For example, the directory
+`~/.cargo/git/db/sigstore-rs-874f7064c0c10336/`, has a hash appended to it and
+it might not be obvious where this came from, but it is a hash of the github
+url. 
 
+Usage:
+```console
+$ cargo r --quiet --bin project-hash -- -u https://github.com/sigstore/sigstore-rs.git
+https://github.com/sigstore/sigstore-rs.git: 874f7064c0c10336
+```
 
