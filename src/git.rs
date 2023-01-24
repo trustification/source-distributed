@@ -36,6 +36,13 @@ impl CargoGit {
         debug!("Branch: {} resolved to revision {}\n", &branch, short);
         self.checkouts_path.join(short)
     }
+
+    pub fn hash_url(repo_url: &str) -> String {
+        let url = Url::parse(repo_url).unwrap();
+        let can_url = CanonicalUrl::new(&url).unwrap();
+        println!("{:?}", &can_url);
+        format!("{}", short_hash(&can_url))
+    }
 }
 
 impl fmt::Display for CargoGit {

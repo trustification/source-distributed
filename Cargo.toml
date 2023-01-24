@@ -37,3 +37,7 @@ path = "src/bin/cargo-in-toto-sign.rs"
 [[bin]]
 name = "cargo-in-toto-verify"
 path = "src/bin/cargo-in-toto-verify.rs"
+
+[[bin]]
+name = "project-hash"
+path = "src/bin/project-hash.rs"
