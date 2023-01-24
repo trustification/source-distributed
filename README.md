@@ -201,3 +201,16 @@ $ cargo r --quiet --bin project-hash -- -u https://github.com/sigstore/sigstore-
 https://github.com/sigstore/sigstore-rs.git: 874f7064c0c10336
 ```
 
+### Print Cargo index hash
+The sole purpose of this tool is to print the hash appended to directories
+`.cargo/registry/cache`, `.cargo/registry/index`, and `.cargo/registry/src`.
+For example:
+```console
+$ ls ~/.cargo/registry/src/
+github.com-1ecc6299db9ec823
+```
+Usage:
+```console
+$ cargo r --quiet --bin index-dir-hash
+crates-io: 1ecc6299db9ec823
+```

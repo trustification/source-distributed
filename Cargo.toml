@@ -41,3 +41,7 @@ path = "src/bin/cargo-in-toto-verify.rs"
 [[bin]]
 name = "project-hash"
 path = "src/bin/project-hash.rs"
+
+[[bin]]
+name = "index-dir-hash"
+path = "src/bin/index-dir-hash.rs"
