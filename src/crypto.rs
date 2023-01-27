@@ -29,7 +29,10 @@ pub async fn generate_keypair(token: Option<String>) -> Result<SigStoreKeyPair> 
         Some(token) => {
             fs::write("token", &token).unwrap();
             let id_token: CoreIdToken = CoreIdToken::from_str(&token).unwrap();
-            TokenProvider::Static((id_token, "keygen".to_string()))
+            TokenProvider::Static((
+                id_token,
+                "repo:trustification/source-distributed:ref:refs/heads/main".to_string(),
+            ))
         }
         _ => TokenProvider::Oauth(OauthTokenProvider::default()),
     };
