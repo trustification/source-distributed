@@ -40,6 +40,7 @@ pub async fn generate_keypair(token: Option<String>) -> Result<SigStoreKeyPair> 
         .request_cert(SigningScheme::ECDSA_P256_SHA256_ASN1)
         .await
     {
+        println!("cert: {}", &_cert);
         let keypair = signer.to_sigstore_keypair().unwrap();
         return Ok(keypair);
     }
