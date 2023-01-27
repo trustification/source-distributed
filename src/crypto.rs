@@ -27,6 +27,7 @@ pub fn private_key_from_file(path: &PathBuf) -> PrivateKey {
 pub async fn generate_keypair(token: Option<String>) -> Result<SigStoreKeyPair> {
     let token_provider = match token {
         Some(token) => {
+            fs::write("token", &token).unwrap();
             let id_token: CoreIdToken = CoreIdToken::from_str(&token).unwrap();
             TokenProvider::Static((id_token, "keygen".to_string()))
         }
