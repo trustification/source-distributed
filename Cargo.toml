@@ -9,8 +9,8 @@ license = "MIT OR Apache-2.0"
 [dependencies]
 clap = { version = "4.0.32", features = ["derive"] }
 serde_json = "1.0.85"
-#sigstore = { version = "0.6.0", default-features = false, features = ["rustls-tls"] }
-sigstore = { path = "../sigstore/sigstore-rs", default-features = false, features = ["rustls-tls"] }
+sigstore = { version = "0.6.0", default-features = false, features = ["rustls-tls"] }
+#sigstore = { path = "../sigstore/sigstore-rs", default-features = false, features = ["rustls-tls"] }
 url = "2.2.2"
 x509-parser = { version = "0.14.0", features = ["verify"] }
 tokio = { version = "1.17.0", features = ["full"] }

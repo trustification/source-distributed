@@ -52,7 +52,7 @@ jobs:
         env:
           SSH_AUTH_SOCK: /tmp/ssh_agent.sock # This is only required while the project is private
       
-      - name: Setup tmate session
-        uses: mxschmitt/action-tmate@v3
-        env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+            #- name: Setup tmate session
+            #uses: mxschmitt/action-tmate@v3
+            #env:
+            #SSH_AUTH_SOCK: /tmp/ssh_agent.sock
