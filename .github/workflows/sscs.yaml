@@ -33,7 +33,7 @@ jobs:
       - name: Generate OIDC Token
         id: token
         run: |
-          echo oidc_token=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=trustification" \
+          echo oidc_token=$(curl -sLS "${ACTIONS_ID_TOKEN_REQUEST_URL}&audience=sigstore" \
             -H "User-Agent: actions/oidc-client" \
             -H "Authorization: Bearer $ACTIONS_ID_TOKEN_REQUEST_TOKEN" \
             | jq '.value' | tr '"' ' ') >> $GITHUB_OUTPUT
