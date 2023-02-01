@@ -3,6 +3,7 @@ use in_toto::crypto::{PrivateKey, SignatureScheme};
 use jsonwebtoken::jwk::AlgorithmParameters;
 use jsonwebtoken::{decode, decode_header, jwk, DecodingKey, Validation};
 use openidconnect::core::CoreIdToken;
+use sha2::{Digest, Sha256};
 use sigstore::crypto::signing_key::SigStoreKeyPair;
 use sigstore::crypto::SigningScheme;
 use sigstore::fulcio::oauth::OauthTokenProvider;
@@ -70,10 +71,11 @@ pub async fn generate_keypair(token: Option<String>) -> Result<SigStoreKeyPair> 
 
             fs::write("token", &token).unwrap();
             let id_token: CoreIdToken = CoreIdToken::from_str(&token).unwrap();
-            TokenProvider::Static((
-                id_token,
-                "repo:trustification/source-distributed:ref:refs/heads/main".to_string(),
-            ))
+            // TODO: use the subject from the token
+            let hash =
+                Sha256::digest(b"repo:trustification/source-distributed:ref:refs/heads/main");
+            let challenge = base16ct::lower::encode_string(&hash);
+            TokenProvider::Static((id_token, challenge))
         }
         _ => TokenProvider::Oauth(OauthTokenProvider::default()),
     };

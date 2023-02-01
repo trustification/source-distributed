@@ -3138,6 +3138,7 @@ name = "source-distributed"
 version = "0.1.0"
 dependencies = [
  "anyhow",
+ "base16ct",
  "cargo",
  "cargo_toml",
  "chrono",
@@ -3150,6 +3151,7 @@ dependencies = [
  "log",
  "openidconnect",
  "serde_json",
+ "sha2 0.10.6",
  "sigstore",
  "tokio",
  "url",
