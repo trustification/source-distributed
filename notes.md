@@ -1002,7 +1002,7 @@ $ curl -Ls https://token.actions.githubusercontent.com/.well-known/jwks | jq
 ```
 
 With those changes in place we should be able to get the CI workflow
-[working](https://github.com/trustification/source-distributed/actions/runs/4076323277/jobs/7023899660)
+[working](https://github.com/trustification/source-distributed/actions/runs/4076323277/jobs/7023899660#step:8:16)
 and see the certificates printed out and not the error message.
 
 One thing I also had to do was to compile/build this project before running
