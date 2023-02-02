@@ -49,19 +49,19 @@ jobs:
       # This step is nice to debug the work flow and will allow an ssh connection
       # to be established where further debugging can be performed. The command
       # to connect can be found in the workflow log in github actions.
+      #- name: Setup tmate session
+      #  uses: mxschmitt/action-tmate@v3
+      #  env:
+      #    SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+
+      - name: in-toto process
+        working-directory: sscs/in-toto
+        run: |
+          ./workflow.sh ${{ steps.token.outputs.oidc_token }}
+        env:
+          SSH_AUTH_SOCK: /tmp/ssh_agent.sock # This is only required while the project is private
+      
       - name: Setup tmate session
         uses: mxschmitt/action-tmate@v3
         env:
-          SSH_AUTH_SOCK: /tmp/ssh_agent.sock
-
-            #- name: in-toto process
-            #working-directory: sscs/in-toto
-            #run: |
-            #./workflow.sh ${{ steps.token.outputs.oidc_token }}
-            #env:
-            #SSH_AUTH_SOCK: /tmp/ssh_agent.sock # This is only required while the project is private
-      
-            #- name: Setup tmate session
-            #uses: mxschmitt/action-tmate@v3
-            #env:
-            #SSH_AUTH_SOCK: /tmp/ssh_agent.sock
+           SSH_AUTH_SOCK: /tmp/ssh_agent.sock
