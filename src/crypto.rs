@@ -53,7 +53,7 @@ fn extract_subject(token: &str, jwks_path: &str) -> String {
         }
         _ => unreachable!("this should be a RSA"),
     };
-    subject.to_string()
+    subject.as_str().unwrap().to_string()
 }
 
 pub async fn generate_keypair(token: Option<String>) -> Result<SigStoreKeyPair> {
