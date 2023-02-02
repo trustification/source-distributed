@@ -48,6 +48,7 @@ fn extract_subject(token: &str, jwks_path: &str) -> String {
             let decoded_token =
                 decode::<HashMap<String, serde_json::Value>>(&token, &decoding_key, &validation)
                     .unwrap();
+            println!("{:?}", &decoded_token);
             decoded_token.claims.get("sub").unwrap().clone()
         }
         _ => unreachable!("this should be a RSA"),
@@ -58,13 +59,14 @@ fn extract_subject(token: &str, jwks_path: &str) -> String {
 pub async fn generate_keypair(token: Option<String>) -> Result<SigStoreKeyPair> {
     let token_provider = match token {
         Some(token) => {
-            // Just writing this the token to disk which can be useful for
+            // Just writing the token to disk which can be useful for
             // debugging a CI workflow
             fs::write("token", &token).unwrap();
 
             // See ./notes.md##coreidtoken for details about the usage of the
             // subject and JSON Web Key Sets (JWKS))
             let subject = extract_subject(&token, "jwks");
+            println!("subject: {}", &subject);
             let id_token: CoreIdToken = CoreIdToken::from_str(&token).unwrap();
             TokenProvider::Static((id_token, subject))
         }
