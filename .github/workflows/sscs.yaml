@@ -30,6 +30,11 @@ jobs:
           ssh-key: ${{ secrets.GH_ACTION_PRIVATE }}
           repository: trustification/source-distributed
 
+      - name: Compile project
+        id: compile
+        run: |
+          cargo b
+
       - name: Generate OIDC Token
         id: token
         run: |
