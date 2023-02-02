@@ -68,7 +68,11 @@ pub async fn generate_keypair(token: Option<String>) -> Result<SigStoreKeyPair> 
             let subject = extract_subject(&token, "jwks");
             println!("subject: {}", &subject);
             let id_token: CoreIdToken = CoreIdToken::from_str(&token).unwrap();
-            TokenProvider::Static((id_token, subject))
+            //TokenProvider::Static((id_token, subject))
+            TokenProvider::Static((
+                id_token,
+                "repo:trustification/source-distributed:ref:refs/heads/main".to_string(),
+            ))
         }
         _ => TokenProvider::Oauth(OauthTokenProvider::default()),
     };
